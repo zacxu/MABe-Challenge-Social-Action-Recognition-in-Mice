@@ -1,0 +1,61 @@
+# Cross-fitted blend and nonlinear probability stacker for performance v2.
+schema_version: 1
+phase11_version: ensemble-performance-v2
+
+base_streams:
+  - name: gbdt
+    manifest: artifacts/phase8/gbdt-performance-v2/final_oof_manifest.json
+    deployable: true
+    eligible_for_optimized_blend: true
+  - name: temporal_phase9
+    manifest: artifacts/temporal/temporal-performance-v2/oof_manifest.json
+    deployable: true
+    eligible_for_optimized_blend: true
+
+optimization:
+  folds: [0, 1, 2, 3, 4]
+  temporal_weight_grid: [0.0, 0.025, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.65, 0.80, 1.0]
+  threshold_grid: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
+  minimum_action_positive_frames: 2000
+  minimum_lab_positive_frames: 5000
+  minimum_lab_action_positive_frames: 500
+  shrinkage_positive_frames: 5000
+  minimum_exact_fbeta_gain: 0.0005
+
+decoder:
+  phase8_config: configs/phase8-performance.yaml
+  baseline_smoothing_seconds: 0.1
+  additional_smoothing_seconds: [0.0, 0.1, 0.2, 0.4]
+  hysteresis_delta: [0.0, 0.03, 0.05, 0.10]
+  global_threshold_references: [0.30, 0.50, 0.70, 0.90]
+  gap_fill_seconds: [0.0, 0.0666666667, 0.1666666667, 0.2666666667, 0.5]
+  minimum_run_seconds: [0.0, 0.0666666667, 0.1666666667, 0.2666666667, 0.5, 1.0]
+
+runtime:
+  hidden_video_count: 200
+  # Conservative six-hour budget, even if the active competition limit is larger.
+  kaggle_limit_seconds: 21600
+  required_headroom_fraction: 0.20
+  phase8_gbdt_seconds_per_video: 5.0
+  temporal_phase9_seconds_per_video: 45.0
+  temporal_phase10_seconds_per_video: 0.0
+
+stacker:
+  enabled_on_blend_plateau: true
+  always_evaluate: true
+  # This runtime-safe stacker consumes the two base probabilities. Geometry is
+  # already represented by the GBDT stream; it is not regenerated a second time.
+  require_base_geometric_features: false
+  maximum_projected_fraction_of_budget: 0.80
+  maximum_positive_rows_per_action: 25000
+  maximum_negative_rows_per_action: 250000
+  negative_hash_keep_per_thousand: 10
+  n_estimators: 300
+  learning_rate: 0.05
+  max_depth: 3
+  min_child_weight: 10.0
+  subsample: 0.90
+  colsample_bytree: 1.0
+  reg_lambda: 5.0
+  device: auto
+  minimum_exact_fbeta_gain: 0.0005

@@ -1,0 +1,76 @@
+# Local Python environments
+.venv/
+venv/
+env/
+ENV/
+myenv/
+
+# Python bytecode and tool caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.cache/
+
+# Test coverage output
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Generated Python packaging files
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
+wheelhouse/
+
+# Editors and notebooks
+.idea/
+.vscode/
+.ipynb_checkpoints/
+*.swp
+*.swo
+
+# Local credentials (keep shareable configuration templates)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.kaggle/
+kaggle.json
+
+# Generated machine-specific environment report
+/environments/local.json
+
+# Local competition data: immutable and too large for version control
+/MABe-mouse-behavior-detection/
+/MABe-mouse-behavior-detection.zip
+/mabe-mouse-behavior-detection.zip
+
+# Generated artifacts (retain directory sentinels only)
+artifacts/*
+!artifacts/.gitkeep
+!artifacts/*/
+artifacts/*/*
+!artifacts/*/.gitkeep
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*~
+~$*
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

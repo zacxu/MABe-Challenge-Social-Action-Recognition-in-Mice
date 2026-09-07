@@ -1,0 +1,56 @@
+# High-capacity, GPU-oriented GBDT profile. Edit this file for tree experiments.
+schema_version: 1
+model_version: xgb-performance-v2
+
+xgboost:
+  objective: binary:logistic
+  eval_metric: aucpr
+  tree_method: hist
+  device: auto
+  n_estimators: 1500
+  early_stopping_rounds: 100
+  learning_rate: 0.03
+  max_depth: 6
+  min_child_weight: 8.0
+  gamma: 0.05
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_alpha: 0.20
+  reg_lambda: 5.0
+  max_bin: 256
+  n_jobs: 8
+  # Aggressive positive weighting caused severe overprediction in v1. Search
+  # 1.0, sqrt_auto, and auto in Phase 8; start with calibrated precision.
+  positive_class_weight: 1.0
+
+sampler:
+  max_positive_rows_per_lab_action: 50000
+  negative_to_positive_ratio: 5.0
+  minimum_negative_rows_per_lab_action: 5000
+  max_rows_per_lab_action: 150000
+  near_boundary_seconds: 1.0
+  background_blocks_per_video_triplet: 16
+  background_block_frames: 64
+
+support:
+  minimum_positive_rows: 100
+  minimum_positive_videos: 2
+  pooled_minimum_positive_rows: 500
+  # Never predict a lab/action that has no direct positive supervision.
+  allow_pooled_without_direct_positives: false
+  auxiliary_labs_by_action: {}
+
+features:
+  solo_groups: [metric, invariant, temporal, boundary, quality, metadata]
+  pair_groups: [metric, egocentric, temporal, group, quality, metadata]
+  maximum_rows_per_chunk: 50000
+
+decoder:
+  smoothing_seconds: 0.1
+  threshold_grid: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.975]
+  fallback_threshold: 0.5
+
+execution:
+  folds: [0, 1, 2, 3, 4]
+  include_auxiliary_training: false
+  seed: 2025

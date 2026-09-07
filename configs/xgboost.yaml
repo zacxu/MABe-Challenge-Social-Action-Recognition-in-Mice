@@ -1,0 +1,57 @@
+# Phase 7 model configuration
+#
+# Edit THIS file to change the initial XGBoost model in future runs. In
+# particular, the `xgboost` section controls tree learning, `sampler` controls
+# the training rows, and `decoder` controls probability-to-interval behavior.
+schema_version: 1
+model_version: xgb-baseline-v1
+
+xgboost:
+  objective: binary:logistic
+  eval_metric: logloss
+  tree_method: hist
+  device: auto
+  n_estimators: 160
+  early_stopping_rounds: 20
+  learning_rate: 0.08
+  max_depth: 5
+  min_child_weight: 5.0
+  gamma: 0.0
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 2.0
+  max_bin: 256
+  n_jobs: 4
+  positive_class_weight: auto
+
+sampler:
+  max_positive_rows_per_lab_action: 3000
+  negative_to_positive_ratio: 2.0
+  minimum_negative_rows_per_lab_action: 1000
+  max_rows_per_lab_action: 9000
+  near_boundary_seconds: 0.5
+  background_blocks_per_video_triplet: 2
+  background_block_frames: 32
+
+support:
+  minimum_positive_rows: 100
+  minimum_positive_videos: 2
+  pooled_minimum_positive_rows: 200
+  # Auxiliary semantics must be explicitly reviewed before enabling a source.
+  auxiliary_labs_by_action: {}
+
+features:
+  solo_groups: [metric, invariant, temporal, boundary, quality, metadata]
+  pair_groups: [metric, egocentric, temporal, group, quality, metadata]
+  maximum_rows_per_chunk: 50000
+
+decoder:
+  smoothing_seconds: 0.1
+  threshold_grid: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+  fallback_threshold: 0.5
+
+execution:
+  folds: [0, 1, 2, 3, 4]
+  include_auxiliary_training: false
+  seed: 2025

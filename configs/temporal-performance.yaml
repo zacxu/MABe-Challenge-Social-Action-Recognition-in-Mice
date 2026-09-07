@@ -1,0 +1,88 @@
+# Main competitive temporal model. Architecture and training knobs live here.
+schema_version: 1
+temporal_version: temporal-performance-v2
+
+data:
+  target_fps: 30.0
+  landmarks: [nose, ear_left, ear_right, body_center, tail_base]
+  window_frames: 512
+  inference_stride_frames: 128
+  inference_edge_frames: 32
+  positive_fraction: 0.60
+  background_fraction: 0.35
+  hard_negative_fraction: 0.05
+  maximum_positive_centers_per_action_entity: 512
+  include_auxiliary_training: true
+
+architecture:
+  family: conv_attention
+  hidden_channels: 128
+  stem_kernel_sizes: [3, 5, 7, 9]
+  tcn_dilations: [1, 2, 4, 8, 16, 32]
+  tcn_kernel_size: 3
+  dropout: 0.25
+  use_bigru: false
+  gru_hidden_size: 128
+  lab_embedding_dim: 16
+  metadata_hidden_dim: 64
+  attention_heads: 8
+  attention_layers: 4
+  attention_ff_multiplier: 4
+  use_lab_adapter: true
+  lab_adapter_dim: 16
+
+training:
+  folds: [0, 1, 2, 3, 4]
+  gate_fold: 0
+  epochs: 30
+  steps_per_epoch: 1000
+  validation_windows_per_route: 1024
+  batch_size: 16
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  warmup_steps: 1000
+  early_stopping_patience: 6
+  early_stopping_metric: average_precision
+  positive_class_weight: 1.5
+  focal_gamma: 2.0
+  soft_f1_weight: 0.20
+  lab_loss_weight_power: 0.5
+  gradient_clip_norm: 1.0
+  ema_decay: 0.999
+  mixed_precision: true
+  minimum_gate_average_precision: 0.15
+  seed: 2025
+
+augmentation:
+  coordinate_noise_std: 0.01
+  time_stretch_min: 0.75
+  time_stretch_max: 1.25
+  keypoint_dropout_probability: 0.10
+  left_right_swap_probability: 0.50
+  mouse_permutation_probability: 0.50
+  geometric_transform_probability: 0.80
+  maximum_rotation_degrees: 180.0
+  reflection_probability: 0.50
+  scale_probability: 0.80
+  scale_min: 0.80
+  scale_max: 1.20
+  frame_shift_probability: 0.50
+  maximum_frame_shift: 8
+  mixup_probability: 0.20
+  mixup_alpha: 0.40
+  cutmix_probability: 0.20
+  cutmix_min_fraction: 0.10
+  cutmix_max_fraction: 0.40
+
+execution:
+  device: auto
+  cache_workers: 4
+  num_workers: 0
+  inference_batch_size: 16
+  oof_part_rows: 250000
+  reflection_tta: true
+
+decoder:
+  threshold_grid: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
+  fallback_threshold: 0.5
+  smoothing_seconds: 0.0

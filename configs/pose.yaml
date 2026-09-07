@@ -1,0 +1,47 @@
+schema_version: 1
+pose_version: pose-v1
+
+canonical_landmarks:
+  - nose
+  - ear_left
+  - ear_right
+  - body_center
+  - tail_base
+  - neck
+  - lateral_left
+  - lateral_right
+  - head
+  - tail_mid
+
+# Aliases are lab-specific and reviewed. Anatomically approximate substitutions
+# (for example hip -> lateral or head -> nose) are intentionally absent.
+bodypart_synonyms:
+  AdaptableSnail:
+    tail_midpoint: tail_mid
+  DeliriousFly:
+    tail_midpoint: tail_mid
+  PleasantMeerkat:
+    tail_midpoint: tail_mid
+  MABe22_keypoints:
+    tail_midpoint: tail_mid
+  MABe22_movies:
+    tail_midpoint: tail_mid
+
+scaling:
+  min_pixels_per_cm: 1.0
+  max_pixels_per_cm: 100.0
+  geometry_ratio_min: 0.25
+  geometry_ratio_max: 4.0
+
+cleanup:
+  max_interpolation_gap_seconds: 0.2
+  max_speed_cm_per_second: 250.0
+  max_jump_pixels_per_frame: 100.0
+  identity_swap_cost_ratio: 0.5
+
+resampling:
+  target_fps: 30.0
+  max_interpolation_gap_seconds: 0.2
+
+# No timing correction is enabled without nested OOF evidence.
+adaptable_snail_frame_corrections: {}

@@ -1,0 +1,14 @@
+schema_version: 1
+feature_version: feature-v1
+
+# Every temporal scale is expressed in physical seconds. The implementation
+# rounds half-up with max(1, floor(seconds * fps + 0.5)).
+temporal_windows_seconds: [0.1, 0.25, 0.5, 1.0, 2.0, 5.0]
+maximum_derivative_gap_seconds: 0.2
+pause_speed_cm_per_second: 1.0
+contact_distances_cm: [1.0, 2.0]
+nearby_mouse_distance_cm: 5.0
+between_mouse_distance_cm: 2.0
+
+chunk_rows: 100000
+audit_max_frames: 1024

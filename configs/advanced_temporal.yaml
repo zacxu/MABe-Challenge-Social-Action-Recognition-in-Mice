@@ -1,0 +1,155 @@
+# Phase 10 bounded advanced-temporal screens. Every comparison uses held-out fold 0.
+schema_version: 1
+phase10_version: temporal-advanced-phase10-v1
+base_temporal_config: temporal.yaml
+
+screen:
+  held_out_fold: 0
+  epochs: 3
+  steps_per_epoch: 60
+  validation_windows_per_route: 128
+  batch_size: 8
+  warmup_steps: 15
+  early_stopping_patience: 2
+  minimum_average_precision_gain: 0.002
+  minimum_exact_fbeta_gain_over_phase9: 0.005
+  failures_before_family_stop: 2
+  maximum_full_oof_candidates: 1
+
+experiments:
+  - name: control_5kp
+    family: control
+
+  - name: receptive_short_256
+    family: receptive_field
+    data_overrides:
+      window_frames: 256
+      inference_stride_frames: 64
+      inference_edge_frames: 16
+    architecture_overrides:
+      tcn_dilations: [1, 2]
+
+  - name: receptive_long_768
+    family: receptive_field
+    data_overrides:
+      window_frames: 768
+      inference_stride_frames: 192
+      inference_edge_frames: 48
+    architecture_overrides:
+      tcn_dilations: [1, 2, 4, 8]
+
+  - name: conv_attention_lite
+    family: conv_attention
+    architecture_overrides:
+      family: conv_attention
+      attention_heads: 2
+      attention_layers: 1
+      attention_ff_multiplier: 2
+
+  - name: conv_attention_wide
+    family: conv_attention
+    architecture_overrides:
+      family: conv_attention
+      hidden_channels: 24
+      attention_heads: 3
+      attention_layers: 2
+      attention_ff_multiplier: 2
+
+  - name: soft_f1_010
+    family: soft_f1
+    training_overrides:
+      soft_f1_weight: 0.10
+
+  - name: soft_f1_025
+    family: soft_f1
+    training_overrides:
+      soft_f1_weight: 0.25
+
+  - name: lab_adapter_4
+    family: lab_conditioning
+    architecture_overrides:
+      use_lab_adapter: true
+      lab_adapter_dim: 4
+
+  - name: lab_adapter_8
+    family: lab_conditioning
+    architecture_overrides:
+      use_lab_adapter: true
+      lab_adapter_dim: 8
+
+  - name: keypoints_4
+    family: keypoints
+    data_overrides:
+      landmarks: [nose, ear_left, ear_right, body_center]
+
+  - name: keypoints_7
+    family: keypoints
+    data_overrides:
+      landmarks: [nose, ear_left, ear_right, body_center, tail_base, lateral_left, lateral_right]
+
+  - name: no_augmentation
+    family: augmentation
+    augmentation_overrides:
+      coordinate_noise_std: 0.0
+      time_stretch_min: 1.0
+      time_stretch_max: 1.0
+      keypoint_dropout_probability: 0.0
+      left_right_swap_probability: 0.0
+      mouse_permutation_probability: 0.0
+      geometric_transform_probability: 0.0
+      reflection_probability: 0.0
+
+  - name: geometry_only
+    family: augmentation
+    augmentation_overrides:
+      coordinate_noise_std: 0.0
+      time_stretch_min: 1.0
+      time_stretch_max: 1.0
+      keypoint_dropout_probability: 0.0
+      left_right_swap_probability: 0.0
+      mouse_permutation_probability: 0.0
+      geometric_transform_probability: 0.5
+
+  - name: time_stretch_only
+    family: augmentation
+    augmentation_overrides:
+      coordinate_noise_std: 0.0
+      keypoint_dropout_probability: 0.0
+      left_right_swap_probability: 0.0
+      mouse_permutation_probability: 0.0
+      geometric_transform_probability: 0.0
+      reflection_probability: 0.0
+
+  - name: left_right_only
+    family: augmentation
+    augmentation_overrides:
+      coordinate_noise_std: 0.0
+      time_stretch_min: 1.0
+      time_stretch_max: 1.0
+      keypoint_dropout_probability: 0.0
+      mouse_permutation_probability: 0.0
+      geometric_transform_probability: 0.0
+      reflection_probability: 0.0
+
+  - name: mouse_permutation_only
+    family: augmentation
+    augmentation_overrides:
+      coordinate_noise_std: 0.0
+      time_stretch_min: 1.0
+      time_stretch_max: 1.0
+      keypoint_dropout_probability: 0.0
+      left_right_swap_probability: 0.0
+      geometric_transform_probability: 0.0
+      reflection_probability: 0.0
+
+  - name: keypoint_dropout_only
+    family: augmentation
+    augmentation_overrides:
+      coordinate_noise_std: 0.0
+      time_stretch_min: 1.0
+      time_stretch_max: 1.0
+      left_right_swap_probability: 0.0
+      mouse_permutation_probability: 0.0
+      geometric_transform_probability: 0.0
+      reflection_probability: 0.0
+

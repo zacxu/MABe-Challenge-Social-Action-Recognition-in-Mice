@@ -1,0 +1,34 @@
+# Phase 12 deterministic, offline deployment configuration.
+schema_version: 1
+inference_version: kaggle-inference-phase12-v6
+
+# Paths are project-relative. The Phase 12 bundler preserves this layout and
+# rewrites the XGBoost registry so no developer-machine path survives.
+assets:
+  xgboost_registry: artifacts/xgb/xgb-baseline-v1/model_registry.parquet
+  blend_weights: artifacts/phase11/ensemble-phase11-v1/blend_weight_registry.parquet
+  decoder_parameters: artifacts/phase11/ensemble-phase11-v1/candidates/phase11-crossfit-action/decoder_parameters.parquet
+  probability_decoder_selection: artifacts/phase11/ensemble-phase11-v1/candidates/phase11-crossfit-action/probability_decoder_selection.parquet
+  deployment_weights: artifacts/phase12/kaggle-inference-phase12-v6/deployment_weights.parquet
+  deployment_decoder_parameters: artifacts/phase12/kaggle-inference-phase12-v6/deployment_decoder_parameters.parquet
+  category_registry: artifacts/features/registry/categories.json
+  vocabulary: artifacts/labels/action_vocabulary.json
+  temporal_lab_registry: artifacts/temporal/temporal-phase9-v1/lab_registry.json
+  temporal_checkpoint_root: artifacts/temporal/temporal-phase9-v1/checkpoints
+  pose_config: configs/pose.yaml
+  feature_config: configs/features.yaml
+  xgboost_config: configs/xgboost.yaml
+  temporal_config: configs/temporal.yaml
+
+ensemble:
+  folds: [0, 1, 2, 3, 4]
+  test_fold_aggregation: mean
+  crossfit_parameter_aggregation: median
+  weight_strategy: action
+
+runtime:
+  hidden_video_count: 200
+  kaggle_limit_seconds: 32400
+  required_headroom_fraction: 0.20
+  resume: true
+  retain_probabilities: false

@@ -1,0 +1,40 @@
+# Offline deployment profile generated from the performance-v2 lineage.
+schema_version: 1
+inference_version: kaggle-inference-performance-v2
+
+assets:
+  xgboost_registry: artifacts/phase8/gbdt-performance-v2/final_model_registry.parquet
+  blend_weights: artifacts/phase11/ensemble-performance-v2/selected_blend_weight_registry.parquet
+  decoder_parameters: artifacts/phase11/ensemble-performance-v2/selected_decoder_parameters.parquet
+  probability_decoder_selection: artifacts/phase11/ensemble-performance-v2/selected_probability_decoder_selection.parquet
+  deployment_weights: artifacts/phase12/kaggle-inference-performance-v2/deployment_weights.parquet
+  deployment_decoder_parameters: artifacts/phase12/kaggle-inference-performance-v2/deployment_decoder_parameters.parquet
+  category_registry: artifacts/features/registry/categories.json
+  vocabulary: artifacts/labels/action_vocabulary.json
+  temporal_lab_registry: artifacts/temporal/temporal-performance-v2/lab_registry.json
+  temporal_checkpoint_root: artifacts/temporal/temporal-performance-v2/checkpoints
+  pose_config: configs/pose.yaml
+  feature_config: configs/features.yaml
+  xgboost_config: artifacts/phase8/gbdt-performance-v2/selected_xgboost.yaml
+  temporal_config: configs/temporal-performance.yaml
+  stacker_registry: artifacts/phase11/ensemble-performance-v2/stacker/model_registry.parquet
+  final_model_registry: artifacts/phase11/ensemble-performance-v2/final_model_registry.json
+
+ensemble:
+  folds: [0, 1, 2, 3, 4]
+  test_fold_aggregation: mean
+  crossfit_parameter_aggregation: median
+  weight_strategy: action
+  probability_model: auto
+
+runtime:
+  hidden_video_count: 200
+  kaggle_limit_seconds: 21600
+  required_headroom_fraction: 0.20
+  resume: true
+  retain_probabilities: false
+
+special_cases:
+  # Local exact-OOF replay: drop 0.311348, scale 0.307920, none 0.307903.
+  # Keep scale_30_over_25 and none as controlled Kaggle A/B alternatives.
+  adaptable_snail_25fps_policy: drop

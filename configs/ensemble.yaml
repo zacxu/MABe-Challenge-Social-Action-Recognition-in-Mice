@@ -1,0 +1,57 @@
+# Phase 11 leakage-safe probability ensembling.
+# Paths are resolved from the project root (the parent of this configs directory).
+schema_version: 1
+phase11_version: ensemble-phase11-v1
+
+base_streams:
+  - name: gbdt
+    manifest: artifacts/phase8/gbdt-phase8-v1/final_oof_manifest.json
+    deployable: true
+    eligible_for_optimized_blend: true
+  - name: temporal_phase9
+    manifest: artifacts/oof/temporal-phase9-v1/f4c0350b5f49/manifest.json
+    deployable: true
+    eligible_for_optimized_blend: true
+  - name: temporal_phase10_reference
+    manifest: artifacts/oof/temporal-advanced-phase10-v1-receptive_short_256/6885f3fa4efa/manifest.json
+    deployable: true
+    eligible_for_optimized_blend: false
+
+optimization:
+  folds: [0, 1, 2, 3, 4]
+  # Convex temporal weights; GBDT receives 1-weight. This is a complete
+  # non-negative simplex search for the two promotion-eligible systems.
+  temporal_weight_grid: [0.0, 0.01, 0.025, 0.05, 0.10, 0.20, 0.35, 0.50, 0.75, 1.0]
+  threshold_grid: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+  minimum_action_positive_frames: 2000
+  minimum_lab_positive_frames: 5000
+  minimum_lab_action_positive_frames: 500
+  shrinkage_positive_frames: 5000
+  minimum_exact_fbeta_gain: 0.000001
+
+decoder:
+  phase8_config: configs/phase8.yaml
+  baseline_smoothing_seconds: 0.1
+  # Phase 8 already established the useful extremes. Re-screen no transform
+  # versus its promoted transform, and the four dominant run/gap pairs. This
+  # keeps exact Phase 11 comparison feasible on 106.6M OOF rows.
+  additional_smoothing_seconds: [0.0, 0.2]
+  hysteresis_delta: [0.05]
+  global_threshold_references: [0.5]
+  gap_fill_seconds: [0.0, 0.1666666667]
+  minimum_run_seconds: [0.0, 0.2666666667]
+
+runtime:
+  hidden_video_count: 200
+  kaggle_limit_seconds: 32400
+  required_headroom_fraction: 0.20
+  phase8_gbdt_seconds_per_video: 2.5
+  temporal_phase9_seconds_per_video: 2.7356250401
+  temporal_phase10_seconds_per_video: 2.7356250401
+
+stacker:
+  enabled_on_blend_plateau: true
+  # A stacker is allowed only after a measured plateau and only when its full
+  # geometry + base-model inference route fits the runtime gate.
+  require_base_geometric_features: true
+  maximum_projected_fraction_of_budget: 0.80

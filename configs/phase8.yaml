@@ -1,0 +1,93 @@
+# Phase 8 economical GBDT strengthening and exact nested decoder calibration.
+# Phase 7 artifacts are immutable inputs; all outputs use `phase8_version`.
+schema_version: 1
+phase8_version: gbdt-phase8-v1
+baseline_model_version: xgb-baseline-v1
+
+screen:
+  held_out_folds: [0, 1]
+  representative_routes_per_lab: 1
+  maximum_training_rows_per_route: 9000
+  maximum_validation_rows_per_route: 4000
+  threshold_grid: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+  feature_candidates:
+    baseline:
+      solo: [metric, invariant, temporal, boundary, quality, metadata]
+      pair: [metric, egocentric, temporal, group, quality, metadata]
+    raw_geometry:
+      solo: [raw, invariant, temporal, boundary, quality, metadata]
+      pair: [raw, egocentric, temporal, group, quality, metadata]
+    no_temporal:
+      solo: [metric, invariant, boundary, quality, metadata]
+      pair: [metric, egocentric, group, quality, metadata]
+    no_metadata:
+      solo: [metric, invariant, temporal, boundary, quality]
+      pair: [metric, egocentric, temporal, group, quality]
+    no_boundary_group:
+      solo: [metric, invariant, temporal, quality, metadata]
+      pair: [metric, egocentric, temporal, quality, metadata]
+    compact_geometry:
+      solo: [metric, invariant, temporal, boundary, quality]
+      pair: [metric, egocentric, temporal, group, quality]
+  hyperparameter_candidates:
+    baseline: {}
+    shallow_regularized:
+      n_estimators: 240
+      learning_rate: 0.05
+      max_depth: 4
+      min_child_weight: 8.0
+      gamma: 0.1
+      subsample: 0.85
+      colsample_bytree: 0.75
+      reg_alpha: 0.2
+      reg_lambda: 5.0
+    deeper:
+      n_estimators: 220
+      learning_rate: 0.05
+      max_depth: 7
+      min_child_weight: 3.0
+      gamma: 0.0
+      subsample: 0.8
+      colsample_bytree: 0.8
+      reg_alpha: 0.1
+      reg_lambda: 2.0
+    unweighted:
+      positive_class_weight: 1.0
+    full_row_column_sampling:
+      subsample: 1.0
+      colsample_bytree: 1.0
+    lower_row_cap:
+      maximum_training_rows_per_route: 6000
+      negative_to_positive_ratio: 1.0
+
+hard_negative:
+  enabled: true
+  top_rows_per_lab_action_fold: 100
+  minimum_probability: 0.5
+  repeat_count: 2
+
+importance:
+  permutation_models_per_route: 1
+  maximum_validation_rows: 3000
+  seed: 2025
+
+routing:
+  blend_weights: [0.0, 0.5, 1.0]
+  minimum_component_improvement: 0.01
+  minimum_winning_folds: 3
+
+decoder:
+  # Phase 7 OOF is already centered-smoothed by 0.1 seconds. Additional
+  # smoothing is evaluated explicitly; zero preserves that frozen stream.
+  additional_smoothing_seconds: [0.0, 0.1, 0.2]
+  threshold_grid: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+  hysteresis_delta: [0.0, 0.05]
+  gap_fill_seconds: [0.0, 0.0333333333, 0.0666666667, 0.1, 0.1666666667]
+  minimum_run_seconds: [0.0, 0.0333333333, 0.0666666667, 0.1, 0.1333333333, 0.1666666667, 0.2666666667]
+  minimum_lab_action_positive_frames: 500
+  minimum_lab_action_positive_videos: 2
+  minimum_action_positive_frames: 2000
+
+promotion:
+  minimum_exact_fbeta_gain: 0.0005
+  seed: 2025

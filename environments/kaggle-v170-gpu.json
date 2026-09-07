@@ -1,0 +1,8 @@
+{
+  "captured_at": "2026-08-25",
+  "image": "gcr.io/kaggle-private-byod/python:v170",
+  "image_digest": "bdf9e0538555f90453619adefb49ba40cfa136db44a9c9be7a42ea715c0aa068",
+  "name": "kaggle-v170-gpu-published-reference",
+  "notes": "Published-image reference. Run `python -m mabe environment --name kaggle-runtime --output /kaggle/working/kaggle-runtime.json` inside the competition notebook to capture the exact attached runtime before training.",
+  "source": "https://github.com/Kaggle/docker-python/releases/tag/v170-GPU-bdf9e0538555f90453619adefb49ba40cfa136db44a9c9be7a42ea715c0aa068"
+}

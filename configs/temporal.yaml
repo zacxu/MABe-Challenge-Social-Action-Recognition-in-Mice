@@ -1,0 +1,70 @@
+# Phase 9 temporal neural baseline. Change `temporal_version` for a new lineage.
+schema_version: 1
+temporal_version: temporal-phase9-v1
+
+data:
+  target_fps: 30.0
+  landmarks: [nose, ear_left, ear_right, body_center, tail_base]
+  window_frames: 512
+  inference_stride_frames: 128
+  inference_edge_frames: 32
+  positive_fraction: 0.50
+  background_fraction: 0.30
+  hard_negative_fraction: 0.20
+  maximum_positive_centers_per_action_entity: 128
+
+# This is the main model-architecture section. All dimensions below are read
+# by src/mabe/temporal_model.py; no architecture width/depth is hard-coded.
+architecture:
+  hidden_channels: 16
+  stem_kernel_sizes: [3, 5, 9]
+  tcn_dilations: [1, 2, 4]
+  tcn_kernel_size: 3
+  dropout: 0.10
+  use_bigru: false
+  gru_hidden_size: 16
+  lab_embedding_dim: 8
+  metadata_hidden_dim: 8
+
+training:
+  folds: [0, 1, 2, 3, 4]
+  gate_fold: 0
+  epochs: 2
+  steps_per_epoch: 20
+  validation_windows_per_route: 64
+  batch_size: 4
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  warmup_steps: 10
+  early_stopping_patience: 2
+  positive_class_weight: 3.0
+  # Inverse training-video frequency exponent; 0 disables and 1 fully balances labs.
+  lab_loss_weight_power: 0.5
+  gradient_clip_norm: 1.0
+  ema_decay: 0.995
+  mixed_precision: true
+  minimum_gate_average_precision: 0.0
+  seed: 2025
+
+augmentation:
+  coordinate_noise_std: 0.01
+  time_stretch_min: 0.90
+  time_stretch_max: 1.10
+  keypoint_dropout_probability: 0.05
+  left_right_swap_probability: 0.50
+  mouse_permutation_probability: 0.50
+  geometric_transform_probability: 0.50
+  maximum_rotation_degrees: 180.0
+  reflection_probability: 0.50
+
+execution:
+  device: auto
+  cache_workers: 2
+  num_workers: 0
+  inference_batch_size: 16
+  oof_part_rows: 250000
+
+decoder:
+  threshold_grid: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+  fallback_threshold: 0.5
+  smoothing_seconds: 0.0

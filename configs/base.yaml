@@ -1,0 +1,19 @@
+schema_version: 1
+run_id: local-dev
+phase: foundation
+seed: 2025
+
+logging:
+  level: INFO
+
+# Relative paths are resolved from this file's directory, never from machine-
+# specific absolute paths. Kaggle examples:
+#   MABE_DATASET_ROOT=/kaggle/input/mabe-mouse-behavior-detection
+#   MABE_ARTIFACT_ROOT=/kaggle/working/artifacts
+#   MABE_CACHE_ROOT=/kaggle/working/cache
+#   MABE_MODEL_ROOT=/kaggle/working/models
+paths:
+  dataset_root: ../MABe-mouse-behavior-detection
+  artifact_root: ../artifacts
+  cache_root: ../artifacts/cache
+  model_root: ../artifacts/models
