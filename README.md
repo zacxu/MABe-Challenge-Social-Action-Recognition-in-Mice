@@ -44,6 +44,7 @@ Update the corresponding routes in `configs/inference-performance.yaml`:
 Windows PowerShell:
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m pip install -r requirements-optional.txt
