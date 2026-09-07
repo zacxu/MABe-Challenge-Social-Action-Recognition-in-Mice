@@ -123,7 +123,7 @@ If training is interrupted, rerun the same command. A checkpoint is reused
 only when its configuration hash matches the current temporal configuration.
 
 
-### 4. Cross-fitted blend and stacker
+### Cross-fitted blend and stacker
 
 ```powershell
 .\.venv\Scripts\python.exe -m mabe ensemble-oof --config configs\base.yaml --phase11-config configs\ensemble-performance.yaml
