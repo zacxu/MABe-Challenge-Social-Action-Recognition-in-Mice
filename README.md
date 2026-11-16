@@ -5,10 +5,17 @@
 **SC4000 Research Project · Group 54 · Nanyang Technological University**  
 College of Computing and Data Science
 
-**Chew Yee Chen · Jovan Tan Chun Ee · Law Zhi Xuan · Xu Zixuan**  
-All authors contributed equally.
+**Xu Zixuan · Chew Yee Chen · Jovan Tan Chun Ee · Law Zhi Xuan**  
 
-**[Read the research paper](Group54_report.pdf) · [Watch the YouTube presentation](https://youtu.be/DdzohzUmGj0) · [Kaggle competition](https://www.kaggle.com/competitions/MABe-mouse-behavior-detection)**
+**[Read the research paper here!](Group54_report.pdf) · [Watch our YouTube presentation here!](https://youtu.be/DdzohzUmGj0) · [Kaggle competition](https://www.kaggle.com/competitions/MABe-mouse-behavior-detection)**
+
+## Competition standings
+
+| Metric | Reported result |
+|---|---:|
+| Kaggle public score | **0.47815** |
+| Team ranking | **82 / 1,412 teams** |
+| Relative standing | **Top 5.8%** |
 
 ## Overview
 
