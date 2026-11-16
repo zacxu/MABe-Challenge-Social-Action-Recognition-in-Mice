@@ -216,6 +216,15 @@ def masked_bce_with_logits(
     focal_gamma: float = 0.0,
     sample_weights: Tensor | None = None,
 ) -> Tensor:
+    """Masked, sample-weighted BCE with optional focal modulation.
+
+    The positive term alone receives ``positive_weight``. With p=sigmoid(logit)
+    and a possibly fractional target y, the focal factor is
+    (1 - [p*y + (1-p)*(1-y)])**focal_gamma. The effective supervision weight is
+    loss_mask times the optional per-example laboratory weight. Reduction uses
+    max(sum(effective_weights), 1), not the count of positives. This adapts the
+    focal principle; positive_weight is not the original paper's alpha.
+    """
     weights = torch.tensor(positive_weight, dtype=logits.dtype, device=logits.device)
     values = torch.nn.functional.binary_cross_entropy_with_logits(
         logits, targets, reduction="none", pos_weight=weights
@@ -242,6 +251,16 @@ def masked_macro_soft_f1_loss(
     sample_weights: Tensor | None = None,
     epsilon: float = 1e-6,
 ) -> Tensor:
+    """One minus the mean differentiable F1 of batch-supervised actions.
+
+    Weighted soft TP, FP, and FN are sums of w*p*y, w*p*(1-y), and w*(1-p)*y
+    over batch and time, where w=loss_mask*sample_weight. Positive BCE weighting
+    is deliberately absent here. Epsilon is added to both ratio terms; actions
+    with no weighted supervision are excluded, including from the mean's
+    denominator. An action with valid negative-only targets is still active.
+    Empty supervision returns a differentiable zero. This is a minibatch
+    training surrogate, not the decoded interval-based competition scorer.
+    """
     weighted_mask = loss_mask
     if sample_weights is not None:
         if sample_weights.ndim != 1 or sample_weights.shape[0] != logits.shape[0]:
@@ -271,6 +290,14 @@ def combined_temporal_loss(
     focal_gamma: float = 0.0,
     sample_weights: Tensor | None = None,
 ) -> Tensor:
+    """Project-specific additive focal-BCE plus macro-soft-F1 objective.
+
+    Return focal_BCE + soft_f1_weight*(1 - mean_active_action_soft_F1).
+    The coefficient is configured externally, not derived from the F1 identity,
+    and does not describe a convex or percentage mixture. Setting it to zero
+    disables the auxiliary term without changing focal-BCE behavior. See
+    report/temporal_loss_explained.md for derivation, sources, and a worked case.
+    """
     bce = masked_bce_with_logits(
         logits,
         targets,
