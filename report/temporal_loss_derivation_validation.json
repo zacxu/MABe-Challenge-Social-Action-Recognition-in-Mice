@@ -1,0 +1,367 @@
+{
+  "audit_type": "documentation-only synthetic numerical verification",
+  "scope": "Loss equations only; no training, inference, dataset access, or empirical performance validation.",
+  "all_passed": true,
+  "case_count": 10,
+  "tensor_dtype": "float64",
+  "device": "cpu",
+  "torch_version": "2.13.0+cu126",
+  "tolerances": {
+    "absolute": 1e-12,
+    "relative": 1e-10
+  },
+  "parameters_from_configuration": {
+    "positive_class_weight": 1.5,
+    "focal_gamma": 2.0,
+    "soft_f1_weight": 0.2,
+    "lab_loss_weight_power": 0.5
+  },
+  "implementation_constant": {
+    "soft_f1_epsilon": 1e-06,
+    "minimum_focal_denominator": 1.0
+  },
+  "formula_summary": {
+    "p": "sigmoid(logit)",
+    "q": "loss_mask * laboratory_sample_weight; sample weight defaults to 1 when absent",
+    "weighted_bce": "-(rho*y*log(p) + (1-y)*log(1-p))",
+    "pt": "p*y + (1-p)*(1-y)",
+    "focal": "sum(q*(1-pt)^gamma*weighted_bce) / max(sum(q), 1)",
+    "soft_counts": "TP=sum(q*p*y); FP=sum(q*p*(1-y)); FN=sum(q*(1-p)*y), over batch and time per action",
+    "soft_f1": "(2*TP+epsilon)/(2*TP+FP+FN+epsilon)",
+    "active_actions": "actions with sum(q)>0; active does not mean a positive target is present",
+    "auxiliary": "1-mean(soft_f1 over active actions); zero if none are active",
+    "combined": "focal + lambda*auxiliary"
+  },
+  "sources": [
+    {
+      "path": "src/mabe/temporal_model.py",
+      "sha256": "2c22994d7d326bec19935b15e0c165ac032c41e8477a631ccd2a94251c920c9c",
+      "symbols": [
+        "masked_bce_with_logits",
+        "masked_macro_soft_f1_loss",
+        "combined_temporal_loss"
+      ]
+    },
+    {
+      "path": "configs/temporal-performance.yaml",
+      "sha256": "6164798648263fd1bfba18d2a037d16c98f3cdc7ee239dc6352248f246f05d0e",
+      "symbols": [
+        "training"
+      ]
+    },
+    {
+      "path": "src/mabe/temporal_training.py",
+      "sha256": "f3d8cfc3d11b9d630bb19ed9b61e39acd3debf0c079bba8346908e315199c61c",
+      "symbols": [
+        "_lab_loss_weights",
+        "_sample_weights",
+        "combined_temporal_loss call sites"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "binary_targets",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        2
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 12.0,
+      "focal_denominator": 12.0,
+      "active_action_count": 2,
+      "components": {
+        "focal_loss": 0.05851891551403609,
+        "soft_f1_loss": 0.26015090816565134,
+        "combined_loss": 0.11054909714716636
+      },
+      "errors": {
+        "focal_loss": 0.0,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0,
+        "gradient_maximum_absolute_error": 6.938893903907228e-18
+      },
+      "gradients_finite": true
+    },
+    {
+      "name": "fractional_mixup_targets",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        2
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 12.0,
+      "focal_denominator": 12.0,
+      "active_action_count": 2,
+      "components": {
+        "focal_loss": 0.17091373335773286,
+        "soft_f1_loss": 0.42868608415658427,
+        "combined_loss": 0.2566509501890497
+      },
+      "errors": {
+        "focal_loss": 2.7755575615628914e-17,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0,
+        "gradient_maximum_absolute_error": 3.469446951953614e-18
+      },
+      "gradients_finite": true
+    },
+    {
+      "name": "partial_masks_and_inactive_action",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        3
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 8.0,
+      "focal_denominator": 8.0,
+      "active_action_count": 2,
+      "components": {
+        "focal_loss": 0.016884542106442153,
+        "soft_f1_loss": 0.20861571156017467,
+        "combined_loss": 0.05860768441847709
+      },
+      "errors": {
+        "focal_loss": 3.469446951953614e-18,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 6.938893903907228e-18,
+        "gradient_maximum_absolute_error": 3.469446951953614e-18
+      },
+      "gradients_finite": true
+    },
+    {
+      "name": "unequal_per_sample_weights",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        2
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 15.299999999999999,
+      "focal_denominator": 15.299999999999999,
+      "active_action_count": 2,
+      "components": {
+        "focal_loss": 0.05284841276911898,
+        "soft_f1_loss": 0.2744713521788038,
+        "combined_loss": 0.10774268320487974
+      },
+      "errors": {
+        "focal_loss": 0.0,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0,
+        "gradient_maximum_absolute_error": 6.938893903907228e-18
+      },
+      "gradients_finite": true
+    },
+    {
+      "name": "zero_supervision",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        2
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 0.0,
+      "focal_denominator": 1.0,
+      "active_action_count": 0,
+      "components": {
+        "focal_loss": 0.0,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0
+      },
+      "errors": {
+        "focal_loss": 0.0,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0,
+        "gradient_maximum_absolute_error": 0.0
+      },
+      "gradients_finite": true,
+      "zero_loss_and_zero_gradient": true
+    },
+    {
+      "name": "subunit_mask_denominator_clamp",
+      "passed": true,
+      "shape": [
+        1,
+        2,
+        1
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 0.1,
+      "focal_denominator": 1.0,
+      "active_action_count": 1,
+      "components": {
+        "focal_loss": 0.017162663827677414,
+        "soft_f1_loss": 0.3333305555787034,
+        "combined_loss": 0.08382877494341809
+      },
+      "errors": {
+        "focal_loss": 3.469446951953614e-18,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 1.3877787807814457e-17,
+        "gradient_maximum_absolute_error": 0.0
+      },
+      "gradients_finite": true,
+      "denominator_clamped_to_one": true
+    },
+    {
+      "name": "lambda_zero",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        2
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.0,
+      "supervision_weight_sum": 12.0,
+      "focal_denominator": 12.0,
+      "active_action_count": 2,
+      "components": {
+        "focal_loss": 0.17091373335773286,
+        "soft_f1_loss": 0.42868608415658427,
+        "combined_loss": 0.17091373335773286
+      },
+      "errors": {
+        "focal_loss": 2.7755575615628914e-17,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 2.7755575615628914e-17,
+        "gradient_maximum_absolute_error": 3.469446951953614e-18
+      },
+      "gradients_finite": true
+    },
+    {
+      "name": "gamma_zero",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        2
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 0.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 12.0,
+      "focal_denominator": 12.0,
+      "active_action_count": 2,
+      "components": {
+        "focal_loss": 0.4034590126088699,
+        "soft_f1_loss": 0.26015090816565134,
+        "combined_loss": 0.4554891942420002
+      },
+      "errors": {
+        "focal_loss": 0.0,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0,
+        "gradient_maximum_absolute_error": 1.0408340855860843e-17
+      },
+      "gradients_finite": true
+    },
+    {
+      "name": "valid_action_without_positive_targets",
+      "passed": true,
+      "shape": [
+        2,
+        3,
+        2
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 12.0,
+      "focal_denominator": 12.0,
+      "active_action_count": 2,
+      "components": {
+        "focal_loss": 0.548761679184064,
+        "soft_f1_loss": 0.999999662286142,
+        "combined_loss": 0.7487616116412925
+      },
+      "errors": {
+        "focal_loss": 0.0,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0,
+        "gradient_maximum_absolute_error": 2.7755575615628914e-17
+      },
+      "gradients_finite": true
+    },
+    {
+      "name": "worked_two_frame_example",
+      "passed": true,
+      "shape": [
+        1,
+        2,
+        1
+      ],
+      "positive_weight": 1.5,
+      "focal_gamma": 2.0,
+      "soft_f1_weight": 0.2,
+      "supervision_weight_sum": 2.0,
+      "focal_denominator": 2.0,
+      "active_action_count": 1,
+      "components": {
+        "focal_loss": 0.17162663827677416,
+        "soft_f1_loss": 0.3333331944445025,
+        "combined_loss": 0.23829327716567467
+      },
+      "errors": {
+        "focal_loss": 2.7755575615628914e-17,
+        "soft_f1_loss": 0.0,
+        "combined_loss": 0.0,
+        "gradient_maximum_absolute_error": 0.0
+      },
+      "gradients_finite": true,
+      "worked_example": {
+        "probabilities": [
+          0.8,
+          0.6
+        ],
+        "targets": [
+          1.0,
+          0.0
+        ],
+        "supervision_weights": [
+          1.0,
+          1.0
+        ],
+        "weighted_bce_per_frame": [
+          0.33471532697131456,
+          0.916290731874155
+        ],
+        "probability_true_per_frame": [
+          0.8,
+          0.4
+        ],
+        "focal_factor_per_frame": [
+          0.03999999999999998,
+          0.36
+        ],
+        "true_positive": 0.8,
+        "false_positive": 0.6,
+        "false_negative": 0.19999999999999996,
+        "soft_f1": 0.6666668055554975,
+        "scaled_soft_f1_loss": 0.0666666388889005
+      }
+    }
+  ]
+}

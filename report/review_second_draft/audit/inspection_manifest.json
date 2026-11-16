@@ -1,0 +1,46 @@
+{
+    "source":  "C:\\Users\\Admin\\Desktop\\4000ml\\SC4000 Second Draft downloaded.docx",
+    "source_sha256":  "C1F93ED21D8DC9A5DF9AE9145F89CA1408F5B677863A015E4E5274EA2F68C0A1",
+    "source_unchanged":  true,
+    "paragraph_count":  267,
+    "table_count":  7,
+    "media":  [
+                  {
+                      "source":  "word/media/image7.png",
+                      "path":  "C:\\Users\\Admin\\Desktop\\4000ml\\report\\review_second_draft\\audit\\media\\image7.png",
+                      "bytes":  210570
+                  },
+                  {
+                      "source":  "word/media/image3.jpg",
+                      "path":  "C:\\Users\\Admin\\Desktop\\4000ml\\report\\review_second_draft\\audit\\media\\image3.jpg",
+                      "bytes":  283899
+                  },
+                  {
+                      "source":  "word/media/image4.png",
+                      "path":  "C:\\Users\\Admin\\Desktop\\4000ml\\report\\review_second_draft\\audit\\media\\image4.png",
+                      "bytes":  162883
+                  },
+                  {
+                      "source":  "word/media/image5.png",
+                      "path":  "C:\\Users\\Admin\\Desktop\\4000ml\\report\\review_second_draft\\audit\\media\\image5.png",
+                      "bytes":  63447
+                  },
+                  {
+                      "source":  "word/media/image6.png",
+                      "path":  "C:\\Users\\Admin\\Desktop\\4000ml\\report\\review_second_draft\\audit\\media\\image6.png",
+                      "bytes":  138027
+                  },
+                  {
+                      "source":  "word/media/image2.png",
+                      "path":  "C:\\Users\\Admin\\Desktop\\4000ml\\report\\review_second_draft\\audit\\media\\image2.png",
+                      "bytes":  18155
+                  },
+                  {
+                      "source":  "word/media/image1.png",
+                      "path":  "C:\\Users\\Admin\\Desktop\\4000ml\\report\\review_second_draft\\audit\\media\\image1.png",
+                      "bytes":  7546
+                  }
+              ],
+    "render":  null,
+    "extraction_note":  "Body paragraph indices count all direct paragraphs; drawings may expose duplicated fallback text. Confirm visual defects from rendering, not raw extraction alone."
+}

@@ -1,0 +1,76 @@
+{
+  "source_reports": {
+    "phase7": "artifacts/xgb/xgb-performance-v2/cv_report.json",
+    "phase8": "artifacts/phase8/gbdt-performance-v2/phase8_report.json",
+    "phase9": "artifacts/temporal/temporal-performance-v2/phase9_report.json",
+    "phase11": "artifacts/phase11/ensemble-performance-v2/phase11_report.json"
+  },
+  "files": [
+    "report/figures/phase6_13/figure1_pipeline_architecture.png",
+    "report/figures/phase6_13/figure1_pipeline_architecture.pdf",
+    "report/figures/phase6_13/figure2_exact_oof_comparison.png",
+    "report/figures/phase6_13/figure2_exact_oof_comparison.pdf",
+    "report/figures/phase6_13/figure3_feature_hardnegative_ablations.png",
+    "report/figures/phase6_13/figure3_feature_hardnegative_ablations.pdf"
+  ],
+  "png_dpi": 350,
+  "pdf_fonttype": 42,
+  "model_comparison": [
+    {
+      "label": "Phase 7: XGBoost",
+      "exact_oof_f1": 0.37104214167842225,
+      "status": "base"
+    },
+    {
+      "label": "Phase 8: calibrated GBDT",
+      "exact_oof_f1": 0.37647055419859127,
+      "status": "base"
+    },
+    {
+      "label": "Phase 9: temporal model",
+      "exact_oof_f1": 0.4210395264844545,
+      "status": "base"
+    },
+    {
+      "label": "Phase 11: equal blend",
+      "exact_oof_f1": 0.4693142831941387,
+      "status": "candidate"
+    },
+    {
+      "label": "Phase 11: action blend (selected)",
+      "exact_oof_f1": 0.47019160201467997,
+      "status": "selected"
+    },
+    {
+      "label": "Phase 11: global blend",
+      "exact_oof_f1": 0.4718820379300707,
+      "status": "candidate"
+    },
+    {
+      "label": "Phase 11: lab blend",
+      "exact_oof_f1": 0.46260979807224767,
+      "status": "candidate"
+    },
+    {
+      "label": "Phase 11: lab/action blend",
+      "exact_oof_f1": 0.461636922657048,
+      "status": "candidate"
+    },
+    {
+      "label": "Phase 11: per-lab selector",
+      "exact_oof_f1": 0.47045872397856553,
+      "status": "candidate"
+    },
+    {
+      "label": "Phase 11: probability stacker",
+      "exact_oof_f1": 0.4546535228588663,
+      "status": "candidate"
+    }
+  ],
+  "notes": [
+    "Phase 10 screens belong to the earlier v1 lineage and are not scored beside performance-v2.",
+    "Phase 13 is an implemented audit framework; performance-v2 audit completion is not asserted.",
+    "The feature/hard-negative ablation figure uses sampled screen AP and best frame F1, not the exact competition metric.",
+    "Model comparison uncertainty bars are omitted because no valid confidence intervals are present in the reports."
+  ]
+}

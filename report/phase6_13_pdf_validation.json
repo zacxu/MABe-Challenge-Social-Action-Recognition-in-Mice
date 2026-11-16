@@ -1,0 +1,180 @@
+{
+  "pdf": "report\\phase6_13_research_section.pdf",
+  "source": "report\\phase9_13_research_section.md",
+  "pages": 14,
+  "file_bytes": 300651,
+  "page_size": "US Letter (612 x 792 pt)",
+  "two_column_body": true,
+  "body_font_pt": 10,
+  "body_leading_pt": 12,
+  "main_sections": [
+    "1. Methodology",
+    "2. Experimental Setup",
+    "3. Experimental Results and Discussion"
+  ],
+  "figure_count": 3,
+  "table_count": 5,
+  "display_equation_count": 4,
+  "all_vector_assets": true,
+  "active_link_count": 0,
+  "bookmark_count": 0,
+  "fonts": [
+    {
+      "name": "AAAAAA+TimesNewRomanPS-BoldMT",
+      "type": "TrueType",
+      "embedded": true,
+      "encoding": "F1+0"
+    },
+    {
+      "name": "AAAAAA+TimesNewRomanPSMT",
+      "type": "TrueType",
+      "embedded": true,
+      "encoding": "F2+0"
+    },
+    {
+      "name": "AAAAAA+TimesNewRomanPS-ItalicMT",
+      "type": "TrueType",
+      "embedded": true,
+      "encoding": "F3+0"
+    },
+    {
+      "name": "FYQMHW+DejaVuSans-Bold",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F1"
+    },
+    {
+      "name": "COQJQD+DejaVuSans",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F2"
+    },
+    {
+      "name": "FWNRNS+DejaVuSans",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F3"
+    },
+    {
+      "name": "FLQEUW+STIXGeneral-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F2"
+    },
+    {
+      "name": "CQYWQR+STIXGeneral-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F4"
+    },
+    {
+      "name": "FCESUE+STIXGeneral-Italic",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F1"
+    },
+    {
+      "name": "GLMOLD+STIXNonUnicode-Italic",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F1"
+    },
+    {
+      "name": "DIJEST+STIXSizeTwoSym-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F3"
+    },
+    {
+      "name": "CDKHYZ+STIXGeneral-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F2"
+    },
+    {
+      "name": "EXDETD+STIXGeneral-Italic",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F3"
+    },
+    {
+      "name": "DUPMRM+STIXGeneral-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F2"
+    },
+    {
+      "name": "CXYTSA+STIXGeneral-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F3"
+    },
+    {
+      "name": "FKWJQG+STIXGeneral-Italic",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F1"
+    },
+    {
+      "name": "GQDKMU+STIXGeneral-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F2"
+    },
+    {
+      "name": "DWLLXD+STIXGeneral-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F3"
+    },
+    {
+      "name": "GEPPET+STIXGeneral-Italic",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F1"
+    },
+    {
+      "name": "CROHXV+STIXGeneral-Italic",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F4"
+    },
+    {
+      "name": "CJFXIC+STIXNonUnicode-Italic",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F5"
+    },
+    {
+      "name": "GPHHEU+DejaVuSans-Bold",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F2"
+    },
+    {
+      "name": "ECNKNX+DejaVuSans",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F1"
+    },
+    {
+      "name": "COBDII+DejaVuSans-Bold",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F2"
+    },
+    {
+      "name": "BNQMIU+DejaVuSans",
+      "type": "Type0",
+      "embedded": true,
+      "encoding": "F1"
+    }
+  ],
+  "all_fonts_embedded": true,
+  "type3_font_count": 0,
+  "missing_required_text": [],
+  "margin_issues": [],
+  "replacement_glyph_count": 0,
+  "formal_submission_template": false,
+  "note": "Journal-style section draft with AAAI-like text/layout; no fabricated author block, abstract, copyright, or conference submission claim."
+}

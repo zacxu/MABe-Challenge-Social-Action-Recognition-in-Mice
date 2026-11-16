@@ -1,0 +1,59 @@
+{
+  "sources": {
+    "artifacts/temporal/temporal-performance-v2/gbdt_comparison_by_lab_action.csv": "e6336628fb231139dda64c8b4fc21a177f33fe0a168e700d4dde2dced18af952",
+    "artifacts/phase8/gbdt-performance-v2/permutation_importance.parquet": "4a038e210fc3f39967f22dc29700eb2ba4d99f5f67ef88853da89d4bc4367333"
+  },
+  "lab_action_comparisons": 93,
+  "win_counts": {
+    "neural": 63,
+    "gbdt": 27,
+    "tie": 3
+  },
+  "permutation_means": [
+    {
+      "group": "temporal",
+      "mean_ap_drop": 0.1720482695808326,
+      "route_count": 29
+    },
+    {
+      "group": "metric",
+      "mean_ap_drop": 0.14819251468727618,
+      "route_count": 29
+    },
+    {
+      "group": "metadata",
+      "mean_ap_drop": 0.013730037122502578,
+      "route_count": 29
+    },
+    {
+      "group": "quality",
+      "mean_ap_drop": 0.0007440779670011689,
+      "route_count": 29
+    },
+    {
+      "group": "egocentric",
+      "mean_ap_drop": 0.022474544254708143,
+      "route_count": 26
+    },
+    {
+      "group": "group",
+      "mean_ap_drop": 0.00018547558131365438,
+      "route_count": 26
+    },
+    {
+      "group": "invariant",
+      "mean_ap_drop": 0.12394357010275021,
+      "route_count": 3
+    },
+    {
+      "group": "boundary",
+      "mean_ap_drop": 0.0034347849506048598,
+      "route_count": 3
+    }
+  ],
+  "notes": [
+    "Saved lab-action comparison uses an outer merge and fills missing scores with zero.",
+    "Permutation columns are grouped by route coverage, not globally ranked by importance.",
+    "No uncertainty intervals are inferred from these summaries."
+  ]
+}

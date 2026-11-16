@@ -1,0 +1,2137 @@
+[
+    {
+        "kind":  "paragraph",
+        "block":  0,
+        "paragraph":  0,
+        "style":  "PaperTitle",
+        "text":  "MABe Challenge - Social Action Recognition in Mice"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  1,
+        "paragraph":  1,
+        "style":  "PaperTitle",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  2,
+        "paragraph":  2,
+        "style":  "AuthorName",
+        "text":  "Chew Yee Chen1*, Jovan Tan Chun Ee1*, Law Zhi Xuan1*, Xu Zixuan1*"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  3,
+        "paragraph":  3,
+        "style":  "AffiliationandAddress",
+        "text":  "1    Nanyang Technological University, College of Computing and Data Science"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  4,
+        "paragraph":  4,
+        "style":  "AffiliationandAddress",
+        "text":  "*    These authors contributed equally to this work. Names are arranged alphabetically."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  5,
+        "paragraph":  5,
+        "style":  "AffiliationandAddress",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  6,
+        "paragraph":  6,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  7,
+        "paragraph":  7,
+        "style":  "AbstractHead",
+        "text":  "Abstract"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  8,
+        "paragraph":  8,
+        "style":  "AbstractHead",
+        "text":  "Automating the recognition of social behaviours in mice from pose tracking could greatly reduce manual annotation. Our solution employs a leakage-safe hybrid model for frame-level detection of 37 solo and pair behaviours for the MABe Challenge. Provided data came with sparse labels, class imbalances, lab-specific naming conventions, and varying frame rates. After auditing labels and data preprocessing, we map heterogeneous pose tracks onto a canonical skeleton. Next, geometric, kinematic, and relational features were manually engineered for the XGBoost classifier while 30 Hz sequences were used for the dual-encoder convolution-attention network. Both models\u0027 out-of-fold probabilities were combined by a cross-fitted, action-wise convex blend and decoded into behaviour intervals with nested thresholds and directed-pair conflict resolution. The blend achieved an out-of-fold F-score of 0.470, ran as an offline Kaggle submission for the MABe Challenge. Our final submission achieves a public score of 0.47815, ranking us 82 out of 1412 teams."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  9,
+        "paragraph":  9,
+        "style":  "SectionHeading",
+        "text":  "1. Introduction"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  10,
+        "paragraph":  10,
+        "style":  "Text",
+        "text":  "1.1 Motivation and problem significance "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  11,
+        "paragraph":  11,
+        "style":  "Text",
+        "text":  "   Documenting animal behaviours when conducting studies to gain insights to the brain and evolution of behaviour [R] is a time-consuming process that requires manual annotation by researchers who will have to look through many hours of footage to distinguish different behaviours [R]. Thus, making the documentation process costly and difficult to scale."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  12,
+        "paragraph":  12,
+        "style":  "Text",
+        "text":  "   The use of automated systems attempts to automate hence speed up the process of classifying animal behaviours but suffer from limited training data and poor generalizability [R]."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  13,
+        "paragraph":  13,
+        "style":  "Text",
+        "text":  "Furthermore, data obtained from different labs often use different cameras, arenas, trackers, skeletons, and behavior definitions. This makes the models trained in one lab limited outside of its specific lab it is trained in. Thus, the importance of robust cross-laboratory automations capable for use across a wide variety of labeling techniques used by different labs."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  14,
+        "paragraph":  14,
+        "style":  "Text",
+        "text":  "1.2 Competition description and challenges"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  15,
+        "paragraph":  15,
+        "style":  "Text",
+        "text":  "In the Kaggle competition ‘MABe Challenge - Social Action Recognition in Mice’, the goal is for us to build models to overcome the above challenges in modeling both individual motion and directed relationships in mice over time."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  16,
+        "paragraph":  16,
+        "style":  "Text",
+        "text":  "The task contains over 400 hours of recordings from more than 20 recording systems and a hidden test set of roughly 200 videos in the form of markerless pose trajectories as tables in parquet files. The inputs include per-video metadata and the two-dimensional tracking coordinates of frames, mice, and body parts. The outputs include half-open behavior intervals with video identification number (ID), agent ID, target ID, action, start frame, and stop frame. The audited local vocabulary contains 37 behaviors split into 11 solo actions and 26 directed-pair actions. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  17,
+        "paragraph":  17,
+        "style":  "Text",
+        "text":  "Additionally, there are five major technical challenges present:"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  18,
+        "paragraph":  18,
+        "style":  "Text",
+        "text":  "Sparse annotations where ‘not labeled’ are unknown instead of negative."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  19,
+        "paragraph":  19,
+        "style":  "Text",
+        "text":  "Behavior frequency is highly imbalanced."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  20,
+        "paragraph":  20,
+        "style":  "Text",
+        "text":  "Pose layouts, scale, frames rate, arenas, and trackers vary by lab."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  21,
+        "paragraph":  21,
+        "style":  "Text",
+        "text":  "Social actions depend on the direction and context of the third mouse."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  22,
+        "paragraph":  22,
+        "style":  "Text",
+        "text":  "Thresholds and post-processing can leak validation labels if fitted on the same fold."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  23,
+        "paragraph":  23,
+        "style":  "Text",
+        "text":  "1.3 Concise summary of proposed solution and novelty"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  24,
+        "paragraph":  24,
+        "style":  "Text",
+        "text":  "Our proposed solution employs a hybrid model using an XGBoost classifier and a dual-encoder convolution-attention network with 1.916 M parameters. Combining the individual models is intended to exploit their complementary strengths."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  25,
+        "paragraph":  25,
+        "style":  "Text",
+        "text":  "Notable innovations included: "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  26,
+        "paragraph":  26,
+        "style":  "Text",
+        "text":  "240 and 321 hand-engineered features were used as gradient-boosted decision tree (GBDT) representations for solo and pair routes respectively."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  27,
+        "paragraph":  27,
+        "style":  "Text",
+        "text":  "Data preprocessing precautions: Canonical behaviour masking, quarantined anomalies, and fixed duplicate-aware grouped folds."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  28,
+        "paragraph":  28,
+        "style":  "Text",
+        "text":  "Leakage-safe selection and deployment: Cross-fitted weights, nested decoder fitting, directed-pair conflict resolution, and offline streaming inference."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  29,
+        "paragraph":  29,
+        "style":  "Text",
+        "text":  "1.4 Evaluation score and relative ranking"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  30,
+        "paragraph":  30,
+        "style":  "Text",
+        "text":  "A summary of our Kaggle ranking is shown below to demonstrate our model’s competitiveness."
+    },
+    {
+        "kind":  "table",
+        "block":  31,
+        "table":  1,
+        "rows":  [
+                     [
+                         "Description",
+                         "Value"
+                     ],
+                     [
+                         "Kaggle public score",
+                         "0.47815"
+                     ],
+                     [
+                         "Team ranking",
+                         "82 out of 1412 teams"
+                     ],
+                     [
+                         "Percentile of teams outranked ",
+                         "5.8 %"
+                     ]
+                 ]
+    },
+    {
+        "kind":  "paragraph",
+        "block":  32,
+        "paragraph":  31,
+        "style":  "Text",
+        "text":  "Table 1. Summary of our team’s Kaggle ranking."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  33,
+        "paragraph":  32,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  34,
+        "paragraph":  33,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  35,
+        "paragraph":  34,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  36,
+        "paragraph":  35,
+        "style":  "Text",
+        "text":  "Figure 1. Submitted notebook and score on the Kaggle evaluation page."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  37,
+        "paragraph":  36,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  38,
+        "paragraph":  37,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  39,
+        "paragraph":  38,
+        "style":  "Text",
+        "text":  "Figure 2. Leaderboard row showing our team’s name, rank, and score."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  40,
+        "paragraph":  39,
+        "style":  "SectionHeading",
+        "text":  "2. Problem formulation, data, and evaluation"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  41,
+        "paragraph":  40,
+        "style":  "Text",
+        "text":  "2.1 Data Audit and Supervised Subset"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  42,
+        "paragraph":  41,
+        "style":  "Text",
+        "text":  "We did a preliminary audit as tracking files alone do not establish whether an annotator reviewed a behaviour and found the number of items for each item type shown in the table below. This defined the usable learning problem before model fitting."
+    },
+    {
+        "kind":  "table",
+        "block":  43,
+        "table":  2,
+        "rows":  [
+                     [
+                         "Audited item",
+                         "Amount"
+                     ],
+                     [
+                         "Training metadata",
+                         "8,789"
+                     ],
+                     [
+                         "Annotation files",
+                         "847"
+                     ],
+                     [
+                         "MABe22 unlabeled videos excluded from supervised loss",
+                         "7,926"
+                     ],
+                     [
+                         "Primary competition-lab validation videos",
+                         "352"
+                     ],
+                     [
+                         "Supervised auxiliary videos",
+                         "495"
+                     ],
+                     [
+                         "Solo actions",
+                         "11"
+                     ],
+                     [
+                         "Pair actions",
+                         "26"
+                     ],
+                     [
+                         "Source tracking rows scanned",
+                         "801,534,603"
+                     ],
+                     [
+                         "Annotation rows scanned",
+                         "83,620"
+                     ]
+                 ]
+    },
+    {
+        "kind":  "paragraph",
+        "block":  44,
+        "paragraph":  42,
+        "style":  "",
+        "text":  "Table 2. Table of audited items."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  45,
+        "paragraph":  43,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  46,
+        "paragraph":  44,
+        "style":  "Text",
+        "text":  "Each video file was first checked for any combination of missing frames, missing coordinates, and undefined values. Files flagged with any of the above were noted for the pose cleaning process to work on later. Next, each video file contains a list of behaviour labels that the model is allowed to predict. Behaviour labels are a row of agent-target-action combinations that were manually reviewed and annotated by a human. We split each triplet combination into its isolated components and went through a round of cosmetic cleaning for each component. This included removing stray whitespaces, removing single apostrophes, and making all letters lower casing. The targets in solo behaviour combinations were standardized to ‘self’. This ensured that equivalent identifiers matched the same supervision masks and feature rows instead of creating artificial categories due to formatting mismatch."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  47,
+        "paragraph":  45,
+        "style":  "Text",
+        "text":  "Next, for each frame of every video, each agent-target-action combination was assigned to one of the four supervision states. A combination is permitted for a video if it appears in that video’s list of behaviour labels, meaning a human annotator reviewed the video for that behaviour. This prevents missing annotations from becoming false negative training examples where the model would then be encouraged to suppress behaviours that were simply not reviewed."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  48,
+        "paragraph":  46,
+        "style":  "Text",
+        "text":  "Positive: The combination is permitted for the video, and a valid event covers the frame."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  49,
+        "paragraph":  47,
+        "style":  "Text",
+        "text":  "Valid Negative: The combination is permitted for the video, but no event covers the frame."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  50,
+        "paragraph":  48,
+        "style":  "Text",
+        "text":  "Masked: The combination is not permitted for the video, so the frame is never used as a positive or a negative."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  51,
+        "paragraph":  49,
+        "style":  "Text",
+        "text":  "Unsupervised: The video has no usable labels thus not used for unsupervised training instead."
+    },
+    {
+        "kind":  "table",
+        "block":  52,
+        "table":  3,
+        "rows":  [
+                     [
+                         "Video category",
+                         "Amount"
+                     ],
+                     [
+                         "Unsupervised training",
+                         "7941"
+                     ],
+                     [
+                         "Supervised training",
+                         "847"
+                     ],
+                     [
+                         "Excluded",
+                         "1"
+                     ]
+                 ]
+    },
+    {
+        "kind":  "paragraph",
+        "block":  53,
+        "paragraph":  50,
+        "style":  "Text",
+        "text":  "Table 3. List of video categories and amounts."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  54,
+        "paragraph":  51,
+        "style":  "Text",
+        "text":  "2.2 Evaluation metric"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  55,
+        "paragraph":  52,
+        "style":  "Text",
+        "text":  "Predictions were scored as behaviour intervals over video frames. We used a half-open convention, where the start is included but the stop frame is excluded. Each frame was then validated in the following three ways:"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  56,
+        "paragraph":  53,
+        "style":  "Text",
+        "text":  "The stop frame must come strictly after the start frame. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  57,
+        "paragraph":  54,
+        "style":  "Text",
+        "text":  "Frame numbers must be non-negative. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  58,
+        "paragraph":  55,
+        "style":  "Text",
+        "text":  "Non-consecutive frame sets are compressed into the smallest possible sets of consecutive start-stop range. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  59,
+        "paragraph":  56,
+        "style":  "Text",
+        "text":  "A failed check crashes the program so that no corrupted interval teaches the final score."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  60,
+        "paragraph":  57,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  61,
+        "paragraph":  58,
+        "style":  "Text",
+        "text":  "Instead of creating our own interpretation, we used the competition host’s own reference scoring notebook, which was copied directly over to our repository and renamed. This was done so that our results are consistent with the Kaggle leaderboard. The scorer first checks that the submission is not empty, correctly ordered, contains the required metadata, and covers the correct set of videos. For each action α in laboratory l , it counts the true positive (TP), false positive (FP), and false negative (FN) frames across all of that lab\u0027s videos The equation for the F1 score for each action in each lab used is as follows:"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  62,
+        "paragraph":  59,
+        "style":  "",
+        "text":  "F1(l, a)= 2 TP(l, a)2 TP(l, a)+FP(l, a)+ FN(l, a)"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  63,
+        "paragraph":  60,
+        "style":  "",
+        "text":  "Figure 3. Visualization of TP, FP, and FN."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  64,
+        "paragraph":  61,
+        "style":  "",
+        "text":  "These scores are first macro-averaged across all the actions and then across all laboratories. This is done so that every action and lab carry equal weight, so there is no action or lab that will dominate. Predictions outside of the human-reviewed set are ignored since the absence of an annotation does not mean that the behaviour is absent. Predicting different actions from one mouse toward the same target at the same time is invalid."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  65,
+        "paragraph":  62,
+        "style":  "Text",
+        "text":  "2.3 Leakage-safe validation "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  66,
+        "paragraph":  63,
+        "style":  "Text",
+        "text":  "We follow the five-fold cross-validation principle presented in the lecture to prevent the model from being validated on videos it has already seen. The data was grouped by complete videos rather than individual frames. All frames, mice, and agent-target pairs from a video were gathered in the same fold. Identical or near-duplicate tracking sequences were also grouped together to prevent leakage between training and validation. The primary validation used 352 videos from 15 laboratories. Labelled frames were balanced across the folds as much as possible to prevent biasness in the evaluation scores. In each round, four folds were used for training and the remaining fold for validation. For example, when the model trained on folds 0, 1, 2, and 4, the model was evaluated on fold 3. Repeating this process with different fold combinations produced an out-of-fold prediction for every validation video, meaning each prediction comes from a model that did not train on that video. Calibration was also cross-fitted. For a particular held-out fold, ensemble weights, probability thresholds, and post-processing parameters were selected using only the other four out-of-fold partitions. Separate leave-one-laboratory, skeleton, and tracker-out evaluations were treated as stress diagnostics and were not used for primary model selection."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  67,
+        "paragraph":  64,
+        "style":  "SectionHeading",
+        "text":  "3. Methodology"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  68,
+        "paragraph":  65,
+        "style":  "Text",
+        "text":  "3.1 Methodology overview"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  69,
+        "paragraph":  66,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  70,
+        "paragraph":  67,
+        "style":  "Text",
+        "text":  "Figure 4. An overview of the proposed combined model."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  71,
+        "paragraph":  68,
+        "style":  "Text",
+        "text":  "Here, we investigate the recognition of specific behaviours from pose trajectories in the MABe challenge. We will use the following methodology for the social action recognition of mice in this competition. We combine explicitly hand constructed motion and geometric features with the learned temporal representations. We will first use a laboratory-specific ensemble tree baseline, optimize it using Bayesian-based hyperparameter tuning, then continue with a temporal attention model. Finally, we combine both the tree ensemble and temporal model probabilities together."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  72,
+        "paragraph":  69,
+        "style":  "Text",
+        "text":  "We will use masked multi-label sequence classification for the different mice. For each video, predictions are allocated a frame, the mouse in question, the target, and the specific action. We will distinguish between solo and social behaviors. Each video frame has a target equal to the permitted agent–target–action combinations, while a different target will denote a different social behaviour. As we have different sets of behaviours and actions across different labs and videos, losses and predictions are only evaluated for valid agent-target-action pairs. The temporal attention model produces multi-label outputs during training, while the final decoder layer will only permit a single action for one agent–target pair for a single frame."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  73,
+        "paragraph":  70,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  74,
+        "paragraph":  71,
+        "style":  "Text",
+        "text":  "3.2 Pose preprocessing and normalization"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  75,
+        "paragraph":  72,
+        "style":  "Text",
+        "text":  "Tracking data from different laboratories differ in body-part definitions, used different camera scales, recorded at different frame rates, and vary in tracking quality. Feeding this information to a model unchanged would let it learn laboratory quirks instead of behaviour. We therefore standardised every video\u0027s tracking file in five steps. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  76,
+        "paragraph":  73,
+        "style":  "Text",
+        "text":  "Common layout. The raw file lists one row per body part, per mouse, per frame. We converted it into a four-dimensional array which included frame, mouse, body part, and coordinate per video. For example, a one-minute video at 30 frames per second (FPS) with three mice and ten landmarks becomes an array of shape 1800 x 3 x 10 x 2. Having a consistent layout lets our model operate consistently across different recording systems."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  77,
+        "paragraph":  74,
+        "style":  "Text",
+        "text":  "Common Skeleton. Body-part names were standardised to ten standard landmarks names including head, left ear, right ear, nose, body centre, left and right lateral torso, tail middle and base. This mapping was entered as a YAML Ain\u0027t Markup Language (YAML) configuration file so that anatomical definitions were applied consistently. For example, a laboratory that tracks only the nose, ears, and tail base leaves the other six landmarks masked. When the body centre is missing, it is estimated from the head and tail and recorded with a mask, so the model can tell estimated centres from tracked ones."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  78,
+        "paragraph":  75,
+        "style":  "Text",
+        "text":  "Figure 5: Ten standardised landmarks on a top-down mouse"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  79,
+        "paragraph":  76,
+        "style":  "Text",
+        "text":  "Common scale. Pixel coordinates were converted to centimetres only when the scale passed three checks. A video that reported 0.5 px·cm⁻¹ would fail the range check, and its coordinates would stay in pixels with the scale indicator set to 0. This matters because speed and distance features are meaningless if the scale is wrong."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  80,
+        "paragraph":  77,
+        "style":  "Text",
+        "text":  "Flagging unreliable data."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  81,
+        "paragraph":  78,
+        "style":  "Text",
+        "text":  "Jumps. A landmark moving faster than 250 cm⋅s⁻¹ was flagged, a conservative physical limit applied uniformly to all mice in all laboratories. For example, a nose point that moves 10 cm between consecutive frames at 30 FPS implies 300 cm⋅s⁻¹ and is flagged. This reduces the risk that tracking errors are interpreted as rapid behavioural movements."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  82,
+        "paragraph":  79,
+        "style":  "Text",
+        "text":  "Gaps. Gaps of up to 0.2 s were filled by linear interpolation, because over so short a time a mouse\u0027s path is close to a straight line. Longer gaps stayed masked because that assumption becomes less credible as the missing interval grows."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  83,
+        "paragraph":  80,
+        "style":  "Text",
+        "text":  "Identity swaps. After two mice crossed paths, a tracker may exchange their labels, such that mouse 1 suddenly follows mouse 2. We flagged these candidates but did not relabel them, because automatic correction can introduce swaps that never happened. The flags became quality features, preserving the distinction between observed uncertainty and an unverified correction."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  84,
+        "paragraph":  81,
+        "style":  "Text",
+        "text":  "Timeline for the temporal model. Sequences were resampled to a uniform 30 Hz by taking the nearest original timestamp. For a 25 FPS video, frames fall at 0.00, 0.04, and 0.08. Each 30 Hz step, at time 0.000 s, 0.033 s, 0.067 s, takes the closest one. Positions were then centered on the median valid body centre and divided by the median body length, so a mouse is described in body length regardless of camera zoom. The mapping back to original frames were kept so predicted intervals use each video\u0027s own frame numbers, as the scorer requires in section 2.2. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  85,
+        "paragraph":  82,
+        "style":  "Text",
+        "text":  "An audit for AdaptableSnail found insufficient evidence for a global 30/25 timing correction on this laboratory’s videos. Inference nevertheless removed its predictions, because that policy scored slightly better in an earlier local comparison."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  86,
+        "paragraph":  83,
+        "style":  "Text",
+        "text":  "3.3 Hand-engineered representation for GBDT"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  87,
+        "paragraph":  84,
+        "style":  "",
+        "text":  "Preprocessing stage had produced one clean object per video, a set of trustworthy consistent mouse positions over time with every missing or uncertain value flagged, we employed hand-engineered representations to convert the cleaned pose object into a table of numbers for the GBDT in the next phase to train on. Thus the classifier can learn the associated patterns with annotated actions."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  88,
+        "paragraph":  85,
+        "style":  "Text",
+        "text":  "To construct hand-engineered features, we first constructed two feature tables for solo actions and pair actions respectively. The tables contained one row per mouse and frame for solo behaviours, and one row per ordered agent-target pair and frame for directed social behaviours. Rows totaled 240 for solo and 321 for directed pair. Separating the routes allow distinct representation for each category without imposing pair relationships onto individual ones."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  89,
+        "paragraph":  86,
+        "style":  "Text",
+        "text":  "Table 4 summarizes the measurements used to construct these representations."
+    },
+    {
+        "kind":  "table",
+        "block":  90,
+        "table":  4,
+        "rows":  [
+                     [
+                         "Table group",
+                         "Feature group ",
+                         "Feature representative measurements"
+                     ],
+                     [
+                         "Solo and directed pair",
+                         "Instantaneous motion",
+                         "Velocity, speed, acceleration, turning rate"
+                     ],
+                     [
+                         "Solo",
+                         "Posture",
+                         "Body length, elongation, body-part angles"
+                     ],
+                     [
+                         "Solo",
+                         "Arena position",
+                         "Distance to boundaries and arena centre"
+                     ],
+                     [
+                         "Directed pair",
+                         "Pair interaction",
+                         "Inter-mouse distance, cross-body-part distances, relative velocity, approach rate"
+                     ],
+                     [
+                         "Directed pair",
+                         "Egocentric geometry",
+                         "Target position along the agent’s forward and lateral axes, facing angle"
+                     ],
+                     [
+                         "Solo, directed pair",
+                         "Temporal motion",
+                         "Mean and variation of speed, displacement, path length, pause ratio, contact ratio"
+                     ],
+                     [
+                         "Directed pair",
+                         "Group context",
+                         "Nearest third-mouse distance, nearby-mouse counts, pair-distance rank"
+                     ],
+                     [
+                         "Solo, directed pair",
+                         "Tracking quality",
+                         "Missingness, interpolation indicators, jump and identity-swap flags"
+                     ],
+                     [
+                         "Solo, directed pair",
+                         "Metadata",
+                         "Laboratory, tracker, frame rate, arena properties, mouse characteristics"
+                     ]
+                 ]
+    },
+    {
+        "kind":  "paragraph",
+        "block":  91,
+        "paragraph":  87,
+        "style":  "Text",
+        "text":  "Table 4. Feature groups and representative measurements."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  92,
+        "paragraph":  88,
+        "style":  "Text",
+        "text":  "Solo features described movement, posture, and position of each mouse within the arena using measurements such as speed, velocity, acceleration, body elongation, turning rate, boundary distance, and among others."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  93,
+        "paragraph":  89,
+        "style":  "Text",
+        "text":  "Pair features described directional relationships between one mouse to another using inter-mouse distance, relative motion, approach rate, facing direction and heading alignment, and among others. Distance itself cannot distinguish a stationary neighbour from an approaching or retreating mouse thus proximity was combined with motion and orientation. Direction was preserved because mouse A acting toward mouse B may be a different behaviour from mouse B acting towards mouse A. The measurements were used to calculate interaction features such as the following:"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  94,
+        "paragraph":  90,
+        "style":  "Text",
+        "text":  "Group features described the positions of other mice around each pair, such as the distance to the nearest third mouse, number of nearby mice, whether a mouse lies between the pair, and whether this pair is the closest in the arena. They provided social context that can make an action between a pair more or less likely."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  95,
+        "paragraph":  91,
+        "style":  "Text",
+        "text":  "Egocentric geometry measured the target as seen from the agent’s point of view."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  96,
+        "paragraph":  92,
+        "style":  "Text",
+        "text":  "Other common feature groups included:"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  97,
+        "paragraph":  93,
+        "style":  "Text",
+        "text":  "Temporal motion which summarised movement over 0.1, 0.25, 0.5, 1, 2, and 5 second windows. These included average speed, displacement, path length, pause ratio, and contact ratio. Multiple windows lengths capture both brief movements and sustained behaviours that cannot be distinguished from a single frame."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  98,
+        "paragraph":  94,
+        "style":  "Text",
+        "text":  "Quality which tracked reliability such as missing frames, interpolated frames, possible identity swaps, jumping points, and among others."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  99,
+        "paragraph":  95,
+        "style":  "Text",
+        "text":  "Metadata which tracked recording setup and mouse characteristics."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  100,
+        "paragraph":  96,
+        "style":  "Text",
+        "text":  "We used features represented by physical units rather than raw pixel units as the former achieved a higher macro average precision score of 0.745 compared to 0.727 for raw geometry. This supports the choice within the evaluated setting without establishing generalisation to unseen laboratories."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  101,
+        "paragraph":  97,
+        "style":  "Text",
+        "text":  "Figure 6. Graph of interaction between two mice in frame 129117 of recording 1459695188 from lab codename BoisterousParrot. M1 and M2 refer to mouse 1 and mouse 2 respectively."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  102,
+        "paragraph":  98,
+        "style":  "Text",
+        "text":  "Figure 6 shows the pose geometry used to calculate interaction features for M1 and M2. For this displayed frame, the features include an approach speed of 56.701  cm·s⁻¹, a relative velocity quality indicator of 1 and a nose-to-target-body distance of 2.940 cm. The distance describes spatial proximity for that frame. However, measurements like approach speed require neighboring observations. These measurements are sufficient evidence for classification compared to independently identifying a behaviour. The complete feature rows were aligned with valid training labels and supplied to the XGBoost classifiers."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  103,
+        "paragraph":  99,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  104,
+        "paragraph":  100,
+        "style":  "Text",
+        "text":  "3.4 GBDT branch architecture and training "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  105,
+        "paragraph":  101,
+        "style":  "Text",
+        "text":  "The GBDT branch uses a collection of binary XGBoost classifiers, with separate feature tables for solo behaviors and directed-pair interactions. Each classifier predicts the probability of a specified action for a particular laboratory. The laboratory is obtained from the video metadata and determines which classifiers are applied. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  106,
+        "paragraph":  102,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  107,
+        "paragraph":  103,
+        "style":  "Text",
+        "text":  "We trained separate classifiers for each laboratory because recording setups and annotation conventions differ across laboratories. However, this means that fewer training samples are available for each classifier. To ensure sufficient training data, a classifier is trained when there are at least 100 positive training rows from at least two different videos. This requirement is checked separately using the training data available in each outer fold."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  108,
+        "paragraph":  104,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  109,
+        "paragraph":  105,
+        "style":  "Text",
+        "text":  "Five-fold cross validation is used to produce one fitted model per supported combination for each held-out fold. In the performance-v2 registry, there are 102 candidate lab-action combinations across 15 primary laboratories, with 90 supported combinations produced 450 fitted XGBoost models and 60 route-fold entries assigned a conservative no-prediction rule because supervision is insufficient. Although the implementation contains pooled and auxiliary routing, the performance-v2 uses only direct lab-action models without pooled routing."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  110,
+        "paragraph":  106,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  111,
+        "paragraph":  107,
+        "style":  "Text",
+        "text":  "To handle the class\u0027s imbalance and computational cost, training examples are sampled separately for each lab-action combination. Positive samples are frames where the specific action occurs. Negative samples are only selected from agent-target-action combinations included in the video’s annotation mask. This prevents the behaviors that were not annotated from being incorrectly treated as negative samples. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  112,
+        "paragraph":  108,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  113,
+        "paragraph":  109,
+        "style":  "Text",
+        "text":  "There are two types of negative samples: near-boundary negatives that sample from frames around the start and end of an action to help the model distinguish when a behavior begins and ends; background negatives that sample from other frames where the action is absent. In total, the sampling plan contains 5518378 rows: 1775250 positives, 2056064 near-boundary negatives, and 1687064 background negatives. For each lab-action combination, the number of samples is capped at 50000 positive rows and 150000 total rows, with a target negative-to-positive ratio of 5:1. The ratio is a sampling target rather than observed overall proportion, since available examples and sampling limits affect the final distribution. Each classifier is trained only on samples from its corresponding lab-action combination, while samples from the outer-fold are excluded."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  114,
+        "paragraph":  110,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  115,
+        "paragraph":  111,
+        "style":  "Text",
+        "text":  "The XGBoost classifiers use a binary logistic objective to estimate the probability of each behavior. During training, AUC-PR on the inner validation set is monitored for early stopping. The histogram-based tree method is used with CUDA acceleration when available and CPU as a fallback. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  116,
+        "paragraph":  112,
+        "style":  "Text",
+        "text":  "Each model is trained with a maximum of 1500 trees with a learning rate of 0.03, a maximum depth of 6 and a minimum child weight of 8. Row and column subsampling are set to 0.82 and 0.80 respectively, while L1 and L2 regularization are set to 0.20 and 5.0 respectively. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  117,
+        "paragraph":  113,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  118,
+        "paragraph":  114,
+        "style":  "Text",
+        "text":  "To determine the number of trees without using the outer evaluation data, one of the four outer-training folds is reserved for inner validation. After the early stopping identifies the best tree count, the model is then retrained with the count of all four outer training folds and evaluated on the remaining outer fold. Videos remain grouped throughout the process so that the frames from the same video do not appear in both training and validation. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  119,
+        "paragraph":  115,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  120,
+        "paragraph":  116,
+        "style":  "Text",
+        "text":  "We also experimented with different feature sets, training settings, and boosting models to determine whether they could improve the baseline. The experiments included feature subsets, seven predefined hyperparameter configurations, additional hard negatives, and alternatives using LightGBM and CatBoost. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  121,
+        "paragraph":  117,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  122,
+        "paragraph":  118,
+        "style":  "Text",
+        "text":  "For hyperparameter screening, representative lab-action combinations were evaluated on two screening folds. The configurations were compared mainly using macro average precision and best frame F1 as a secondary metric. Candidate configurations were compared using the screening metrics to select the probability model for subsequent decoder tuning. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  123,
+        "paragraph":  119,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  124,
+        "paragraph":  120,
+        "style":  "Text",
+        "text":  "Decoder tuning was used to improve how frame probabilities were converted into behavior intervals. The decoder searches include decision thresholds, centered smoothing, hysteresis, short-gap filling, and minimum prediction duration. Broader fallback settings were used for combinations with limited training support. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  125,
+        "paragraph":  121,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  126,
+        "paragraph":  122,
+        "style":  "Text",
+        "text":  "For each evaluation fold, the decoder settings were selected without the fold labels to avoid leakage. Finally, competing actions were resolved for each directed mouse pair, and consecutive predictions were converted into half-open behavior intervals."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  127,
+        "paragraph":  123,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  128,
+        "paragraph":  124,
+        "style":  "Text",
+        "text":  "3.5 Temporal branch architecture and training"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  129,
+        "paragraph":  125,
+        "style":  "Text",
+        "text":  "Our temporal attention model will first sample trajectories using the nearest timestamp. It will then record the mappings between the original and sampled frames for the probabilities required for the submission frame system. If landmarks for any mouse are unavailable, it is zeroed after normalization and retain specific masks."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  130,
+        "paragraph":  126,
+        "style":  "Text",
+        "text":  "Each solo input contains 23 channels, which include 10 body coordinates, 5 landmark flags, 2 displacement components, 1 scalar displacement magnitude, 2 body axis components, 1 normalised body length, 1 tracking confidence and 1 mouse validity. If we have 2 mouses, we will concatenate agent and target solo vectors with relative centre displacement, distance, relative displacement change, heading dot and cross products, and pair validity. This will yield a total of 54 channels. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  131,
+        "paragraph":  127,
+        "style":  "Text",
+        "text":  "For each training example, we have 512 frames. Independent solo and pair encoders follow the same architecture but use separate weights and output heads. We will describe the model architecture below."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  132,
+        "paragraph":  128,
+        "style":  "Text",
+        "text":  "We use a  multiscale convolution stem which applies kernels of 3, 5, 7, and 9 frames in parallel, each with 32 channels. We will then concatenate and project it into 128 channels, which we use GroupNorm, followed by a GELU activation. We use a laboratory conditioning method which concatenates a 16-dimensional learned lab embedding with three metadata values: a source frame rate divided by 30,a  mouse count divided by four, and a scale validity. We then use an MLP which maps the resulting 19 values through 64 units to 128 channels. A second 16 dimensional laboratory embedding provides an additive adapter."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  133,
+        "paragraph":  129,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  134,
+        "paragraph":  130,
+        "style":  "Text",
+        "text":  "We then use 6 residual blocks to apply depth wise temporal convolutions of kernel size three with dilations 1, 2, 4, 8, 16, and 32, followed by pointwise channel mixing, GroupNorm, GELU, and dropout. Our dilated convolutions follow the sequence-modeling methods of temporal convolutional networks (Bai, Kolter, and Koltun 2018). We will ensure centered padding permits preceding and following context. Next, the convolutional kernel span a total of 135 frames, covering approximately 4.5s of video. However, GroupNorm aggregates over the temporal dimension, hence the normalized representation already depends statistically on the complete window (Wu and He 2018)."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  135,
+        "paragraph":  131,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  136,
+        "paragraph":  132,
+        "style":  "Text",
+        "text":  "For our conv-attention mechanism, we will use 4 self-attention blocks following the convolution layers before. Each uses pre-LayerNorm, eight attention heads, residual connections, and a feed-forward layer from 128 to 512 and back to 128 channels, with dropout of 0.25 used. We then set the self-attention to connect to positions throughout the 512-frame window. We have to ensure our implementation adds no separate positional embedding and that temporal relationships is supplied through the convolutional layers. The linear output heads predict 11 solo and 26 pair logits per frame. Invalid actions receive a logit of −20 before sigmoid conversion. In total, our complete model contains 1,915,749 trainable parameters."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  137,
+        "paragraph":  133,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  138,
+        "paragraph":  134,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  139,
+        "paragraph":  135,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  140,
+        "paragraph":  136,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  141,
+        "paragraph":  137,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  142,
+        "paragraph":  138,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  143,
+        "paragraph":  139,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  144,
+        "paragraph":  140,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  145,
+        "paragraph":  141,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  146,
+        "paragraph":  142,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  147,
+        "paragraph":  143,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  148,
+        "paragraph":  144,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  149,
+        "paragraph":  145,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  150,
+        "paragraph":  146,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  151,
+        "paragraph":  147,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  152,
+        "paragraph":  148,
+        "style":  "Text",
+        "text":  "3.5 Model and deployment pipeline"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  153,
+        "paragraph":  149,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  154,
+        "paragraph":  150,
+        "style":  "Text",
+        "text":  "Pose tracks, laboratory metadata, and annotation masksPose tracks, laboratory metadata, and annotation masks"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  155,
+        "paragraph":  151,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  156,
+        "paragraph":  152,
+        "style":  "Text",
+        "text":  "XGBoost and calibration video-wise CV.lab/action routes cross-fitted interval parameters.XGBoost and calibration video-wise CV.lab/action routes cross-fitted interval parameters.Cross-fitted probability ensemble Nonnegative action-wise weights with shrinkage nested thresholds, gap filling, and interval conflict resolutionCross-fitted probability ensemble Nonnegative action-wise weights with shrinkage nested thresholds, gap filling, and interval conflict resolutionConv-Attention Independent solo and pair encoders frame probabilities from five foldsConv-Attention Independent solo and pair encoders frame probabilities from five foldsNormalized sequences 30 Hz; 512-frame windows solo: 23 channels; pair: 54 channelsNormalized sequences 30 Hz; 512-frame windows solo: 23 channels; pair: 54 channelsFeature Engineering,solo and pair geometry,kinetics, rolling context, validity, and metadataFeature Engineering,solo and pair geometry,kinetics, rolling context, validity, and metadata"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  157,
+        "paragraph":  153,
+        "style":  "Text",
+        "text":  "Offline inference fold averaging; streaming and recovery submission validation and frozen assetsOffline inference fold averaging; streaming and recovery submission validation and frozen assets"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  158,
+        "paragraph":  154,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  159,
+        "paragraph":  155,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  160,
+        "paragraph":  156,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  161,
+        "paragraph":  157,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  162,
+        "paragraph":  158,
+        "style":  "Text",
+        "text":  "3.6 Temporal Conv-Attention (TCN) Model"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  163,
+        "paragraph":  159,
+        "style":  "Text",
+        "text":  "Solo input: B × 512 × 23  Directed-pair input: B × 512 × 54Solo input: B × 512 × 23  Directed-pair input: B × 512 × 54"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  164,
+        "paragraph":  160,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  165,
+        "paragraph":  161,
+        "style":  "Text",
+        "text":  "Linear heads, 128 → 11 solo actions and 128 → 26 pair actions validity-masked logits → sigmoid probabilities weighted overlap aggregation; stride 128, edge taper 32Linear heads, 128 → 11 solo actions and 128 → 26 pair actions validity-masked logits → sigmoid probabilities weighted overlap aggregation; stride 128, edge taper 32Six residual depthwise TCN blocks kernel 3, dilations of 1, 2, 4, 8, 16, 32 pointwise + GroupNorm + GELU, dropout of 0.25Six residual depthwise TCN blocks kernel 3, dilations of 1, 2, 4, 8, 16, 32 pointwise + GroupNorm + GELU, dropout of 0.25Six residual depthwise TCN blocks kernel 3, dilations of 1, 2, 4, 8, 16, 32 pointwise + GroupNorm + GELU, dropout of 0.25Six residual depthwise TCN blocks kernel 3, dilations of 1, 2, 4, 8, 16, 32 pointwise + GroupNorm + GELU, dropout of 0.25Multi-scale Conv1D: kernels 3, 5, 7, 9 4 × 32 → concatenate → 1 × 1 → 128 GroupNorm + GELUMulti-scale Conv1D: kernels 3, 5, 7, 9 4 × 32 → concatenate → 1 × 1 → 128 GroupNorm + GELU"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  166,
+        "paragraph":  162,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  167,
+        "paragraph":  163,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  168,
+        "paragraph":  164,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  169,
+        "paragraph":  165,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  170,
+        "paragraph":  166,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  171,
+        "paragraph":  167,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  172,
+        "paragraph":  168,
+        "style":  "Text",
+        "text":  "3.7 Training Objective"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  173,
+        "paragraph":  169,
+        "style":  "Text",
+        "text":  "We train the temporal model with a project-specific combination of focal-modulated binary cross-entropy and a macro soft-F1 penalty:"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  174,
+        "paragraph":  170,
+        "style":  "",
+        "text":  "L=Lfocal+0.201-1Aa∈AF1,asoft"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  175,
+        "paragraph":  171,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  176,
+        "paragraph":  172,
+        "style":  "Text",
+        "text":  "Here we use a positive BCE weight of 1.5 to give the positive contribution more weight, counteracting positive class imbalance. We also use an exponent two to emphasize positive and difficult examples, adapting the focusing factor of Lin et al. (2017). We set our BCE to be evaluated directly from logits for numerical stability. Both the loss components exclude unannotated actions, invalid frames or entities, and use normalized inverse-square-root training-video counts to weight laboratories."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  177,
+        "paragraph":  173,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  178,
+        "paragraph":  174,
+        "style":  "Text",
+        "text":  "We design the soft F1 to replace thresholded predictions with probabilities, providing a differentiable overlap penalty shown below:"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  179,
+        "paragraph":  175,
+        "style":  "",
+        "text":  "F1,asoft=2TPa+ϵ2TPa+FPa+FNa+ϵ"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  180,
+        "paragraph":  176,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  181,
+        "paragraph":  177,
+        "style":  "Text",
+        "text":  "where TP, FP, and FN are probability-based counts that are summed over all batch and time using the supervision masks and laboratory weights. The action set A contains channels with valid supervision in the current solo or pair batch, including channels with no positive targets. We set the epsilon is fixed at 1e-6. Ultimately, macro averaging gives each active action one contribution."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  182,
+        "paragraph":  178,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  183,
+        "paragraph":  179,
+        "style":  "Text",
+        "text":  "The additive coefficient of 0.20 is a configured hyperparameter that we later established as the optimal by a controlled ablation. This loss is a training surrogate and is different from the competition F1."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  184,
+        "paragraph":  180,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  185,
+        "paragraph":  181,
+        "style":  "Text",
+        "text":  "3.8 Sampling and Augmentation"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  186,
+        "paragraph":  182,
+        "style":  "Text",
+        "text":  "In our experiment, we used a sampling of 60% positive-centered windows, 35% randomly centered background windows, and 5% hard-negative windows.  Random windows can contains positive frames, while hard-negative allocation falls back to random window sampling when eligible mined examples becomes unavailable. We then set our training to alternate between solo and pair batches and uses AdamW, warm-up, and then we use cosine learning-rate decay, gradient clipping, mixed precision on CUDA, and an exponential moving average of model parameters (Loshchilov and Hutter 2019)"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  187,
+        "paragraph":  183,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  188,
+        "paragraph":  184,
+        "style":  "Text",
+        "text":  "For data augmentation, we introduce some coordinate noise to the poses, together with random landmark dropout, time stretching, left–right landmark exchange, mouse permutation, rotation, reflection, scaling, and temporal shifts. Permutations and time stretching in our data help to transform the associated targets and masks for the entities. Temporal shifts encourages a small tolerance to input–annotation timing offsets by moving mouse inputs while keeping labels fixed. We further use MixUp to interpolate compatible features and labels to intersect their supervision masks (Zhang et al. 2018) and temporal CutMix to replaces a continuous set of features, labels, and masks (Yun et al. 2019)."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  189,
+        "paragraph":  185,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  190,
+        "paragraph":  186,
+        "style":  "Text",
+        "text":  "3.9 Probability Emsembling"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  191,
+        "paragraph":  187,
+        "style":  "Text",
+        "text":  "The GBDT and the temporal models capture different aspects of behavior, hence we have to combine their continuous probabilities before thresholding. We conduct an alignment check to see whether the tree and temporal predictions match by laboratory, video, original frame, agent, target, action, and fold."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  192,
+        "paragraph":  188,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  193,
+        "paragraph":  189,
+        "style":  "Text",
+        "text":  "For k fold scoring, the blended weights are estimated using the other four folds. The action-wise combination is"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  194,
+        "paragraph":  190,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  195,
+        "paragraph":  191,
+        "style":  "Text",
+        "text":  "pak=1-wakpatree+wakpatemporal, 0≤wak≤1."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  196,
+        "paragraph":  192,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  197,
+        "paragraph":  193,
+        "style":  "Text",
+        "text":  "We then compare global, action, lab, and lab–action weight scopes on the temporal-weight sets of {0, 0.025, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.65, 0.80, 1}. The weight fitting uses a threshold-optimized macro F1 surrogate. The fine-grained estimates then shrink towards the parent weights according to positive-frame support, while sparse groups fall back to broader estimates. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  198,
+        "paragraph":  194,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  199,
+        "paragraph":  195,
+        "style":  "Text",
+        "text":  "We also evaluate equal weighting and a per-laboratory candidate selector. We further train a nonlinear XGBoost stacker on the two base probabilities, using a 300 depth 3 trees with learning rates of 0.05 and regularization. The stacker does not receive the engineered features again since those are already represented by the tree probabilities."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  200,
+        "paragraph":  196,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  201,
+        "paragraph":  197,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  202,
+        "paragraph":  198,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  203,
+        "paragraph":  199,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  204,
+        "paragraph":  200,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  205,
+        "paragraph":  201,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  206,
+        "paragraph":  202,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  207,
+        "paragraph":  203,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  208,
+        "paragraph":  204,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  209,
+        "paragraph":  205,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  210,
+        "paragraph":  206,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  211,
+        "paragraph":  207,
+        "style":  "SectionHeading",
+        "text":  "Experimental Setup"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  212,
+        "paragraph":  208,
+        "style":  "Text",
+        "text":  "4.1 Data, Validation Splits, and Evaluation Metric"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  213,
+        "paragraph":  209,
+        "style":  "Text",
+        "text":  "Our data audit correctly identified 8,789 training rows, 847 labeled videos, and 7,926 unlabeled MABe22 videos. Our evaluation uses 352 videos from 15 competition laboratories, with the remaining 495 labeled videos coming from the auxiliary sources. We have 5 fixed video folds, which contain 70, 73, 70, 68, and 71 primary videos. Duplicate data are kept within a fold while unlabeled data, videos without annotation masks, and ambiguous or videos missing annotation are excluded from our training dataset. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  214,
+        "paragraph":  210,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  215,
+        "paragraph":  211,
+        "style":  "Text",
+        "text":  "Our GBDT model uses primary training data only, whereas our temporal model can use eligible labeled auxiliary sources. Both models are evaluated on the same 352 primary videos, which has 106,642,451 masked frame–entity–action rows. As both models uses different training data, the comparison measures the complete modeling pipelines rather than just the 2 models architectures. We use the competition scorer. For beta equal to one, the score is"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  216,
+        "paragraph":  212,
+        "style":  "",
+        "text":  "S=1Ll=1L1Ala∈Al2TPla2TPla+FPla+FNla"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  217,
+        "paragraph":  213,
+        "style":  "Text",
+        "text":  "where L is the number of evaluated laboratories and the action set for each laboratory, which contains the ground truth actions. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  218,
+        "paragraph":  214,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  219,
+        "paragraph":  215,
+        "style":  "Text",
+        "text":  "4.2 Training Configurations"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  220,
+        "paragraph":  216,
+        "style":  "Text",
+        "text":  "We summarize our training hyperparameters below."
+    },
+    {
+        "kind":  "table",
+        "block":  221,
+        "table":  5,
+        "rows":  [
+                     [
+                         "Setting",
+                         "Tree branch",
+                         "Temporal branch"
+                     ],
+                     [
+                         "Maximum training length",
+                         "1,500 trees; patience 100",
+                         "30 epochs × 1,000 alternating-route steps; patience 6"
+                     ],
+                     [
+                         "Learning rate",
+                         "0.03",
+                         "0.0003; 1,000-step warm-up, cosine decay"
+                     ],
+                     [
+                         "Capacity",
+                         "Depth 6; min child weight 8",
+                         "Hidden width 128; 6 TCN blocks; 4 attention blocks"
+                     ],
+                     [
+                         "Regularization",
+                         "L1 0.20; L2 5.0; split gamma 0.05",
+                         "Dropout 0.25; AdamW weight decay 0.0001"
+                     ],
+                     [
+                         "Row/column sampling",
+                         "0.85 / 0.80",
+                         "Batch 16; positive/random-background/hard-negative 0.60/0.35/0.05"
+                     ],
+                     [
+                         "Positive weighting",
+                         "1.0",
+                         "1.5; focal exponent 2; soft-F1 coefficient 0.20"
+                     ],
+                     [
+                         "Checkpoint criterion",
+                         "Inner-fold area under precision–recall",
+                         "Average of pooled solo and pooled pair validation AP"
+                     ]
+                 ]
+    },
+    {
+        "kind":  "paragraph",
+        "block":  222,
+        "paragraph":  217,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  223,
+        "paragraph":  218,
+        "style":  "SectionHeading",
+        "text":  "5. Experimental Results and Discussion"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  224,
+        "paragraph":  219,
+        "style":  "Text",
+        "text":  "5.1 Feature and GBDT ablations"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  225,
+        "paragraph":  220,
+        "style":  "Text",
+        "text":  "We evaluated the contribution of feature groups, training choices, and alternative boosting models using a fixed screening protocol. The screening results below use macro average precision (AP) and macro best frame F1 as surrogate metrics."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  226,
+        "paragraph":  221,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "table",
+        "block":  227,
+        "table":  6,
+        "rows":  [
+                     [
+                         "Feature configuration",
+                         "Marco AP",
+                         "Marco best frame F1 "
+                     ],
+                     [
+                         "Selected full feature set",
+                         "0.747638",
+                         "0.721625"
+                     ],
+                     [
+                         "Without metadata",
+                         "0.743838",
+                         "0.716733"
+                     ],
+                     [
+                         "Raw rather than metric geometry",
+                         "0.726809",
+                         "0.710686"
+                     ]
+                 ]
+    },
+    {
+        "kind":  "paragraph",
+        "block":  228,
+        "paragraph":  222,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  229,
+        "paragraph":  223,
+        "style":  "Text",
+        "text":  "The selected feature set performed best on both screening metrics. Removing metadata reduced marco AP by 0.003800, indicating a modest contribution from information about the recording environment and the mice. Replacing metric geometry with raw geometry caused a larger decrease of 0.020829. This suggests that physical-scale features were more useful than raw coordinates in the evaluated setting, potentially because they reduce differences caused by camera scale and recording conditions."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  230,
+        "paragraph":  224,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "table",
+        "block":  231,
+        "table":  7,
+        "rows":  [
+                     [
+                         "Screening experiment",
+                         "Marco AP",
+                         "Outcome"
+                     ],
+                     [
+                         "Baseline for training variants",
+                         "0.747638",
+                         "Retrained"
+                     ],
+                     [
+                         "Cross-fitted hard-negative mining",
+                         "0.737155",
+                         "Not promoted"
+                     ],
+                     [
+                         "Depth, weighting, row-cap and regularization variants",
+                         "None exceeded 0.747638",
+                         "Baseline retrained"
+                     ],
+                     [
+                         "XGBoost in the alternative-family screen",
+                         "0.740373",
+                         "Retrained"
+                     ],
+                     [
+                         "LightGBM in the alternative-family screen",
+                         "0.736333",
+                         "Not selected as the final probability model "
+                     ],
+                     [
+                         "CatBoost in the alternative-family screen",
+                         "0.736157",
+                         "Not selected as the final probability model"
+                     ]
+                 ]
+    },
+    {
+        "kind":  "paragraph",
+        "block":  232,
+        "paragraph":  225,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  233,
+        "paragraph":  226,
+        "style":  "Text",
+        "text":  "Additional hard-negative mining reduced marco AP by 0.010483 showing that emphasizing difficult negatives did not improve the model under tested setup. Likewise, none of the searched hyperparameter variants exceeded the baseline. In the separate alternative-family screen, XGBoost achieved the highest marco AP, although some individual lab-action combinations showed potential benefits from LightGBM or CatBoost. These findings supported retraining XGBoost as the final probability model. The alternative-family scores should be compared within their own screen rather than directly against the feature–screen baseline."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  234,
+        "paragraph":  227,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  235,
+        "paragraph":  228,
+        "style":  "Text",
+        "text":  "Shuffling temporal, metric, and invariant features provided the largest mean AP drops: 0.1720,0.1482 and 0.1239 respectively. Egocentric features contributed a smaller drop of 0.0225, followed by metadata at 0.0137, boundary features at 0.0034, tracking-quality features at 0.0007, and group context at 0.0002. These results suggest that movement over time, physical geometry, and body-shape information supplied much of the model’s predictive signal. However, a small average importance does not establish that a feature family is unnecessary. Its contribution may be concentrated in particular actions or laboratories or overlap with information captured by other features."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  236,
+        "paragraph":  229,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  237,
+        "paragraph":  230,
+        "style":  "Text",
+        "text":  "The clearest improvement in the official metric came from nested decoding rather than a change to the probability model, Tuning thresholds and temporal postprocessing increased the exact out-of-fold F-score from 0.371042 to 0.376471, an absolute gain of approximately 0.00543. The number of decoded intervals also fell from 110506 to 57734. This reduction is consistent with fewer fragmented predictions, but fewer intervals alone do not imply better performance because the official metric evaluates predicted frame sets. The accompanying F-score increase demonstrates that the revised decoding improved frame-level behavior predictions."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  238,
+        "paragraph":  231,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  239,
+        "paragraph":  232,
+        "style":  "Text",
+        "text":  "5.2. Temporal Model"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  240,
+        "paragraph":  233,
+        "style":  "Text",
+        "text":  "Our temporal model achieved competition F1 score of 0.421040, exceeding the tree reference by 0.044569. This makes the temporal model a useful complement to the GBDT. However, the temporal model performed better in 63 of 93 laboratory–action comparisons, the tree model in 27, and three were tied. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  241,
+        "paragraph":  234,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  242,
+        "paragraph":  235,
+        "style":  "Text",
+        "text":  "5.3 Global Ablations"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  243,
+        "paragraph":  236,
+        "style":  "Text",
+        "text":  "We summarize our ablations for different comparisons between different choices of models and baselines. The action-wise blend did not score the highest. The global blend exceeded it by 0.001690, and the per-laboratory selector by 0.000267, but were excluded by the implementation\u0027s deployment candidate restriction."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  244,
+        "paragraph":  237,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  245,
+        "paragraph":  238,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  246,
+        "paragraph":  239,
+        "style":  "Text",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  247,
+        "paragraph":  240,
+        "style":  "Text",
+        "text":  "5.4 Conclusion and Limitations"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  248,
+        "paragraph":  241,
+        "style":  "BulletedList",
+        "text":  "In our study, we proved feature-based and sequence-based predictors work well together in the experiment. Combining the tree and temporal branches produced the largest gain, consistent with their moderate probability correlation and limited error overlap. "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  249,
+        "paragraph":  242,
+        "style":  "SectionHeading",
+        "text":  "References"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  250,
+        "paragraph":  243,
+        "style":  "SectionHeading",
+        "text":  "Bai, S.; Kolter, J. Z.; and Koltun, V. 2018. An Empirical Evaluation of Generic Convolutional and Recurrent Networks for Sequence Modeling. arXiv:1803.01271."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  251,
+        "paragraph":  244,
+        "style":  "SectionHeading",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  252,
+        "paragraph":  245,
+        "style":  "SectionHeading",
+        "text":  "Cawley, G. C.; and Talbot, N. L. C. 2010. On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation. *Journal of Machine Learning Research*, 11(70): 2079–2107."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  253,
+        "paragraph":  246,
+        "style":  "SectionHeading",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  254,
+        "paragraph":  247,
+        "style":  "SectionHeading",
+        "text":  "Chen, T.; and Guestrin, C. 2016. XGBoost: A Scalable Tree Boosting System. In *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, 785–794. New York: Association for Computing Machinery. doi:10.1145/2939672.2939785."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  255,
+        "paragraph":  248,
+        "style":  "SectionHeading",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  256,
+        "paragraph":  249,
+        "style":  "SectionHeading",
+        "text":  "Ke, G.; Meng, Q.; Finley, T.; Wang, T.; Chen, W.; Ma, W.; Ye, Q.; and Liu, T.-Y. 2017. LightGBM: A Highly Efficient Gradient Boosting Decision Tree. In *Advances in Neural Information Processing Systems 30*, 3146–3154."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  257,
+        "paragraph":  250,
+        "style":  "SectionHeading",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  258,
+        "paragraph":  251,
+        "style":  "SectionHeading",
+        "text":  "Lin, T.-Y.; Goyal, P.; Girshick, R.; He, K.; and Dollár, P. 2017. Focal Loss for Dense Object Detection. In *Proceedings of the IEEE International Conference on Computer Vision*, 2980–2988. doi:10.1109/ICCV.2017.324."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  259,
+        "paragraph":  252,
+        "style":  "SectionHeading",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  260,
+        "paragraph":  253,
+        "style":  "SectionHeading",
+        "text":  "Loshchilov, I.; and Hutter, F. 2019. Decoupled Weight Decay Regularization. In *Proceedings of the International Conference on Learning Representations*."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  261,
+        "paragraph":  254,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  262,
+        "paragraph":  255,
+        "style":  "SectionHeading",
+        "text":  "Sun, J. J.; Marks, M.; Golden, S.; Pereira, T.; Kennedy, A.; Dane, S.; Howard, A.; and Chow, A. 2025. MABe Challenge—Social Action Recognition in Mice. Kaggle."
+    },
+    {
+        "kind":  "paragraph",
+        "block":  263,
+        "paragraph":  256,
+        "style":  "SectionHeading",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  264,
+        "paragraph":  257,
+        "style":  "SectionHeading",
+        "text":  "References for first part is below"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  265,
+        "paragraph":  258,
+        "style":  "SectionHeading",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  266,
+        "paragraph":  259,
+        "style":  "SectionHeading",
+        "text":  "Datta, S. R., Anderson, D. J., Branson, K., Perona, P., \u0026 Leifer, A. (2019). Computational neuroethology: A call to action. Neuron, 104(1), 11–24. https://doi.org/10.1016/j.neuron.2019.09.038"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  267,
+        "paragraph":  260,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  268,
+        "paragraph":  261,
+        "style":  "",
+        "text":  "Anderson, D. J., \u0026 Perona, P. (2014). Toward a science of computational ethology. Neuron, 84(1), 18–31. https://doi.org/10.1016/j.neuron.2014.09.005"
+    },
+    {
+        "kind":  "paragraph",
+        "block":  269,
+        "paragraph":  262,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  270,
+        "paragraph":  263,
+        "style":  "",
+        "text":  "Sun, J. J., Karigo, T., Chakraborty, D., Mohanty, S. P., Wild, B., Sun, Q., Chen, C., Anderson, D. J., Perona, P., Yue, Y., \u0026 Kennedy, A. (2021). The multi-agent behavior dataset: Mouse dyadic social interactions. In Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks (Vol. 1). https://arxiv.org/abs/2104.02710 "
+    },
+    {
+        "kind":  "paragraph",
+        "block":  271,
+        "paragraph":  264,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  272,
+        "paragraph":  265,
+        "style":  "",
+        "text":  ""
+    },
+    {
+        "kind":  "paragraph",
+        "block":  273,
+        "paragraph":  266,
+        "style":  "",
+        "text":  ""
+    }
+]
